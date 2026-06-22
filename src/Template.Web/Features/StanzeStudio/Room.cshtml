@@ -1,0 +1,490 @@
+@model Template.Web.Features.StanzeStudio.StanzaStudioRoomViewModel
+@{
+    ViewData["Title"] = Model.RoomName;
+}
+
+@section styles {
+    <style>
+        .study-room-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .timer-circle-container {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 0 auto;
+        }
+        .timer-svg {
+            transform: rotate(-90deg);
+            width: 220px;
+            height: 220px;
+        }
+        .timer-circle-bg {
+            fill: none;
+            stroke: #f3f4f6;
+            stroke-width: 10;
+        }
+        .timer-circle-progress {
+            fill: none;
+            stroke: #3b82f6;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear;
+        }
+        .timer-circle-progress.break-mode {
+            stroke: #10b981;
+        }
+        .timer-text-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .chat-messages {
+            height: 380px;
+            overflow-y: auto;
+        }
+        .chat-bubble {
+            max-width: 75%;
+            border-radius: 16px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            position: relative;
+            word-wrap: break-word;
+        }
+        .chat-bubble.mine {
+            background-color: #3b82f6;
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+        .chat-bubble.others {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+        .chat-bubble.system {
+            background-color: transparent;
+            color: #6b7280;
+            align-self: center;
+            font-size: 0.8rem;
+            font-style: italic;
+            text-align: center;
+            max-width: 100%;
+        }
+        .task-item {
+            transition: all 0.2s ease;
+        }
+        .task-item.completed {
+            opacity: 0.6;
+        }
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+        }
+        .avatar-circle-room {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: white;
+        }
+    </style>
+}
+
+<div id="app-room" class="container py-4 study-room-container" v-cloak>
+    <!-- Header -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-3 bg-primary-light rounded-3 text-primary">
+                    <i class="fa-solid fa-graduation-cap fs-3"></i>
+                </div>
+                <div>
+                    <span class="text-secondary small fw-semibold">Stanza Studio • @Model.CorsoName</span>
+                    <h2 class="fw-bold text-dark mb-0">@Model.RoomName</h2>
+                </div>
+            </div>
+            <div>
+                <a href="/StanzeStudio" class="btn btn-outline-secondary rounded-pill px-4" @@click="leaveRoomBeforeNavigate">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Esci dalla Stanza
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="row g-4">
+        <!-- Left Side: Timer & Tasks -->
+        <div class="col-lg-6">
+            <!-- Pomodoro Timer Widget -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4 text-center">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold text-dark mb-0">Timer Pomodoro Co-op</h5>
+                    <span class="badge rounded-pill px-3 py-1.5 fw-semibold" :class="isBreak ? 'bg-success-light text-success' : 'bg-primary-light text-primary'">
+                        <i class="fa-regular fa-lightbulb me-1"></i>{{ isBreak ? 'Modalità Pausa' : 'Modalità Studio' }}
+                    </span>
+                </div>
+
+                <!-- Circular Timer -->
+                <div class="timer-circle-container mb-4">
+                    <svg class="timer-svg">
+                        <circle class="timer-circle-bg" cx="110" cy="110" r="100" />
+                        <circle class="timer-circle-progress" :class="{ 'break-mode': isBreak }" cx="110" cy="110" r="100" :stroke-dasharray="dashArray" :stroke-dashoffset="dashOffset" />
+                    </svg>
+                    <div class="timer-text-container">
+                        <span class="d-block display-4 fw-bold text-dark font-monospace">{{ formattedTime }}</span>
+                        <span class="text-secondary small fw-medium tracking-wide uppercase">{{ isTimerRunning ? 'In esecuzione' : 'In pausa' }}</span>
+                    </div>
+                </div>
+
+                <!-- Timer Controls -->
+                <div class="d-flex justify-content-center gap-3 mb-2">
+                    <button class="btn btn-lg rounded-pill px-4" :class="isTimerRunning ? 'btn-warning text-white' : 'btn-primary'" @@click="toggleTimer">
+                        <i class="fa-solid me-2" :class="isTimerRunning ? 'fa-pause' : 'fa-play'"></i>
+                        {{ isTimerRunning ? 'Pausa' : 'Avvia' }}
+                    </button>
+                    <button class="btn btn-lg btn-light border rounded-pill px-4" @@click="resetTimer">
+                        <i class="fa-solid fa-rotate-left me-2"></i>Reset
+                    </button>
+                    <button class="btn btn-lg btn-outline-secondary rounded-pill px-4" @@click="toggleBreakMode">
+                        <i class="fa-solid fa-arrows-rotate me-2"></i>{{ isBreak ? 'Studia' : 'Pausa' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Collaborative Todo List -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-list-check text-primary me-2"></i>Task List di Gruppo</h5>
+                
+                <!-- Add Task Form -->
+                <form @@submit.prevent="addTask" class="input-group mb-3 shadow-sm rounded-3 overflow-hidden">
+                    <input type="text" v-model="newTaskText" class="form-control border-0 bg-light px-3 py-2.5" placeholder="Aggiungi una task per il gruppo..." required />
+                    <button class="btn btn-primary px-4 border-0" type="submit">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </form>
+
+                <!-- Tasks List -->
+                <div v-if="tasks.length === 0" class="text-center py-4 text-muted">
+                    <i class="fa-solid fa-clipboard-question fs-3 opacity-50 mb-2"></i>
+                    <p class="small mb-0">Nessuna attività inserita. Aggiungine una per iniziare!</p>
+                </div>
+                <div v-else class="d-flex flex-column gap-2" style="max-height: 250px; overflow-y: auto;">
+                    <div v-for="task in tasks" :key="task.id" class="task-item card border-0 bg-light p-3 rounded-3 d-flex flex-row align-items-center justify-content-between" :class="{ 'completed': task.done }">
+                        <div class="form-check mb-0 d-flex align-items-center">
+                            <input class="form-check-input border-secondary-subtle cursor-pointer" type="checkbox" :checked="task.done" @@change="toggleTask(task.id)" :id="'task-' + task.id" />
+                            <label class="form-check-label task-text fw-medium text-dark ms-2.5 cursor-pointer" :for="'task-' + task.id">
+                                {{ task.text }}
+                            </label>
+                        </div>
+                        <button class="btn btn-sm text-danger hover-bg-danger-light border-0" @@click="deleteTask(task.id)">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Chat & Participants -->
+        <div class="col-lg-6">
+            <div class="row g-4">
+                <!-- Participants List -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                        <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-nodes text-success me-2"></i>Studenti Online ({{ participants.length }})</h5>
+                        <div class="d-flex flex-wrap gap-2.5">
+                            <div v-for="participant in participants" :key="participant" class="d-flex align-items-center gap-2 bg-light px-3 py-1.5 rounded-pill border">
+                                <div class="avatar-circle-room" :class="getAvatarColor(participant)">
+                                    {{ getInitials(participant) }}
+                                </div>
+                                <span class="fw-semibold text-dark small">{{ participant }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Widget -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-column">
+                        <h5 class="fw-bold text-dark mb-3"><i class="fa-regular fa-comments text-primary me-2"></i>Chat della Stanza</h5>
+                        
+                        <!-- Messages Area -->
+                        <div ref="chatContainer" class="chat-messages d-flex flex-column bg-light rounded-4 p-3 mb-3 border">
+                            <div v-for="(msg, index) in chatMessages" :key="index" :class="['chat-bubble', msg.type]" class="d-flex flex-column shadow-sm">
+                                <span v-if="msg.type !== 'system'" class="fw-bold fs-9 mb-0.5" :class="msg.type === 'mine' ? 'text-white-50' : 'text-primary'">
+                                    {{ msg.user }}
+                                </span>
+                                <span class="fs-7.5">{{ msg.text }}</span>
+                                <span v-if="msg.type !== 'system'" class="text-end fs-9 mt-1 opacity-70">
+                                    {{ msg.time }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Form -->
+                        <form @@submit.prevent="sendChatMessage" class="input-group">
+                            <input type="text" v-model="newChatMessageText" class="form-control rounded-start-3 px-3 py-2.5 border border-end-0" placeholder="Scrivi un messaggio..." required />
+                            <button class="btn btn-primary rounded-end-3 px-4 border" type="submit">
+                                <i class="fa-regular fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <!-- SignalR client library -->
+    <script src="~/js/bundle-signalr.js"></script>
+    <script src="~/js/bundle-vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app-room',
+            data: {
+                roomId: '@Model.RoomId',
+                userNickname: '@Model.UserNickname',
+                
+                // SignalR Connection
+                connection: null,
+
+                // Pomodoro Timer State
+                isTimerRunning: false,
+                remainingSeconds: @Model.DefaultDurationMinutes * 60,
+                totalDurationSeconds: @Model.DefaultDurationMinutes * 60,
+                isBreak: false,
+                timerInterval: null,
+
+                // SVG dash properties
+                dashArray: 2 * Math.PI * 100, // 628.31
+
+                // Shared Todo List
+                tasks: [],
+                newTaskText: '',
+
+                // Participants
+                participants: [],
+
+                // Chat Messages
+                chatMessages: [],
+                newChatMessageText: ''
+            },
+            computed: {
+                formattedTime() {
+                    const mins = Math.floor(this.remainingSeconds / 60);
+                    const secs = this.remainingSeconds % 60;
+                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                },
+                dashOffset() {
+                    const ratio = this.remainingSeconds / this.totalDurationSeconds;
+                    return this.dashArray * (1 - ratio);
+                }
+            },
+            methods: {
+                // SignalR connection initialization
+                initSignalR() {
+                    this.connection = new signalR.HubConnectionBuilder()
+                        .withUrl('/templateHub')
+                        .withAutomaticReconnect()
+                        .configureLogging(signalR.LogLevel.Error)
+                        .build();
+
+                    // Register SignalR Client Callbacks
+                    this.connection.on('UserJoined', (userName, participantsList) => {
+                        this.participants = participantsList;
+                        this.chatMessages.push({
+                            type: 'system',
+                            text: `${userName} è entrato nella stanza.`
+                        });
+                        this.scrollToBottom();
+                    });
+
+                    this.connection.on('UserLeft', (userName, participantsList) => {
+                        this.participants = participantsList;
+                        this.chatMessages.push({
+                            type: 'system',
+                            text: `${userName} ha lasciato la stanza.`
+                        });
+                        this.scrollToBottom();
+                    });
+
+                    this.connection.on('ReceiveChatMessage', (userName, text, time) => {
+                        this.chatMessages.push({
+                            type: userName === this.userNickname ? 'mine' : 'others',
+                            user: userName,
+                            text: text,
+                            time: time
+                        });
+                        this.scrollToBottom();
+                    });
+
+                    this.connection.on('TimerUpdated', (isRunning, remainingSeconds, isBreak) => {
+                        this.isTimerRunning = isRunning;
+                        this.remainingSeconds = remainingSeconds;
+                        this.isBreak = isBreak;
+                        
+                        // Recalculate duration if we swapped mode or reset
+                        if (isBreak) {
+                            this.totalDurationSeconds = 5 * 60; // break duration: 5 min
+                        } else {
+                            this.totalDurationSeconds = @Model.DefaultDurationMinutes * 60; // study duration
+                        }
+
+                        this.manageLocalTimerInterval();
+                    });
+
+                    this.connection.on('TasksUpdated', (updatedTasks) => {
+                        this.tasks = updatedTasks;
+                    });
+
+                    // Start connection
+                    this.connection.start()
+                        .then(() => {
+                            console.log("SignalR Connected to Hub");
+                            // Join Room Group
+                            this.connection.invoke('JoinRoom', this.roomId, this.userNickname)
+                                .catch(err => console.error("Error joining room:", err));
+                        })
+                        .catch(err => {
+                            console.error("SignalR Connection Error:", err);
+                        });
+                },
+
+                // Timer actions
+                toggleTimer() {
+                    const nextRunningState = !this.isTimerRunning;
+                    this.connection.invoke('UpdateTimer', this.roomId, nextRunningState, this.remainingSeconds, this.isBreak)
+                        .catch(err => console.error("Error toggling timer:", err));
+                },
+                resetTimer() {
+                    const duration = this.isBreak ? 5 * 60 : @Model.DefaultDurationMinutes * 60;
+                    this.connection.invoke('UpdateTimer', this.roomId, false, duration, this.isBreak)
+                        .catch(err => console.error("Error resetting timer:", err));
+                },
+                toggleBreakMode() {
+                    const nextBreakState = !this.isBreak;
+                    const duration = nextBreakState ? 5 * 60 : @Model.DefaultDurationMinutes * 60;
+                    this.connection.invoke('UpdateTimer', this.roomId, false, duration, nextBreakState)
+                        .catch(err => console.error("Error switching timer mode:", err));
+                },
+                manageLocalTimerInterval() {
+                    if (this.timerInterval) {
+                        clearInterval(this.timerInterval);
+                        this.timerInterval = null;
+                    }
+
+                    if (this.isTimerRunning) {
+                        this.timerInterval = setInterval(() => {
+                            if (this.remainingSeconds > 0) {
+                                this.remainingSeconds--;
+                            } else {
+                                // Timer finished! Play notification and trigger pause
+                                clearInterval(this.timerInterval);
+                                this.timerInterval = null;
+                                this.isTimerRunning = false;
+                                
+                                // Auto transition modes for local notification
+                                if (window.Notification && Notification.permission === "granted") {
+                                    new Notification(this.isBreak ? "Pausa finita!" : "Studio finito!", {
+                                        body: this.isBreak ? "Tempo di tornare a studiare!" : "Prenditi una meritata pausa!"
+                                    });
+                                }
+                            }
+                        }, 1000);
+                    }
+                },
+
+                // Task actions
+                addTask() {
+                    if (!this.newTaskText.trim()) return;
+                    this.connection.invoke('AddTask', this.roomId, this.newTaskText)
+                        .then(() => {
+                            this.newTaskText = '';
+                        })
+                        .catch(err => console.error("Error adding task:", err));
+                },
+                toggleTask(taskId) {
+                    this.connection.invoke('ToggleTask', this.roomId, taskId)
+                        .catch(err => console.error("Error toggling task:", err));
+                },
+                deleteTask(taskId) {
+                    this.connection.invoke('DeleteTask', this.roomId, taskId)
+                        .catch(err => console.error("Error deleting task:", err));
+                },
+
+                // Chat actions
+                sendChatMessage() {
+                    if (!this.newChatMessageText.trim()) return;
+                    this.connection.invoke('SendChatMessage', this.roomId, this.userNickname, this.newChatMessageText)
+                        .then(() => {
+                            this.newChatMessageText = '';
+                        })
+                        .catch(err => console.error("Error sending chat message:", err));
+                },
+
+                // Leaving room cleanly before navigate
+                leaveRoomBeforeNavigate() {
+                    if (this.connection) {
+                        this.connection.invoke('LeaveRoom', this.roomId, this.userNickname)
+                            .catch(err => console.error("Error leaving room:", err));
+                    }
+                },
+
+                // Helper formatting utilities
+                getInitials(name) {
+                    if (!name) return "ST";
+                    const parts = name.split(/[\s@_.-]+/);
+                    if (parts.length >= 2) {
+                        return (parts[0][0] + parts[1][0]).toUpperCase();
+                    }
+                    return name.substring(0, 2).toUpperCase();
+                },
+                getAvatarColor(name) {
+                    const colors = [
+                        'bg-primary',
+                        'bg-success',
+                        'bg-danger',
+                        'bg-warning text-dark',
+                        'bg-info text-dark',
+                        'bg-purple'
+                    ];
+                    let sum = 0;
+                    for (let i = 0; i < name.length; i++) {
+                        sum += name.charCodeAt(i);
+                    }
+                    return colors[sum % colors.length];
+                },
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        const container = this.$refs.chatContainer;
+                        if (container) {
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    });
+                }
+            },
+            mounted() {
+                this.initSignalR();
+                
+                // Ask for browser notification permission
+                if (window.Notification && Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
+            },
+            beforeDestroy() {
+                this.leaveRoomBeforeNavigate();
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                }
+            }
+        });
+    </script>
+}

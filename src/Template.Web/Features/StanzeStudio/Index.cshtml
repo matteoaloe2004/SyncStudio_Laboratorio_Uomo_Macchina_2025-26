@@ -1,0 +1,159 @@
+@model Template.Web.Features.StanzeStudio.StanzeStudioViewModel
+@{
+    ViewData["Title"] = "Stanze di Studio";
+}
+
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="fw-bold text-dark mb-1">Stanze di Studio</h1>
+            <p class="text-secondary mb-0">Collabora e studia in tempo reale con altri studenti usando il metodo Pomodoro</p>
+        </div>
+        <div>
+            <button class="btn btn-primary rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#createRoomModal">
+                <i class="fa-solid fa-plus me-2"></i>Crea Nuova Stanza
+            </button>
+        </div>
+    </div>
+
+    <!-- Feedback messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-circle-xmark me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Search & Filters -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <form method="get" action="@Url.Action("Index", "StanzeStudio")" class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" name="searchTerm" class="form-control bg-light border-start-0" placeholder="Cerca per nome stanza o materia..." value="@Model.SearchTerm" />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="corsoId" class="form-select bg-light">
+                    <option value="">Tutte le materie</option>
+                    @foreach (var corso in Model.Corsi)
+                    {
+                        <!option value="@corso.Id" @(Model.SelectedCorsoId == corso.Id ? "selected" : "")>@corso.Nome</!option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-grid">
+                <button type="submit" class="btn btn-secondary rounded-3"><i class="fa-solid fa-filter me-2"></i>Filtra</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Rooms List Grid -->
+    @if (Model.Stanze == null || Model.Stanze.Count == 0)
+    {
+        <div class="card border-0 shadow-sm rounded-4 text-center p-5 bg-white">
+            <div class="py-4">
+                <i class="fa-solid fa-ghost fs-1 text-muted mb-3 opacity-50"></i>
+                <h5 class="fw-bold text-dark">Nessuna stanza trovata</h5>
+                <p class="text-secondary max-w-md mx-auto">Non ci sono stanze di studio attive per i criteri di ricerca impostati. Crea una nuova stanza per iniziare!</p>
+                <button class="btn btn-primary rounded-pill shadow-sm px-4 mt-2" data-bs-toggle="modal" data-bs-target="#createRoomModal">
+                    <i class="fa-solid fa-plus me-2"></i>Crea la prima stanza
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var stanza in Model.Stanze)
+            {
+                var isFocus = stanza.IsInEsecuzione;
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white p-4 d-flex flex-column position-relative transition-all hover-translate-y">
+                        <!-- Upper Section -->
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="badge bg-primary-light text-primary rounded-pill px-2.5 py-1 fs-8 fw-semibold mb-2">@stanza.CorsoNome</span>
+                                <h5 class="fw-bold text-dark mb-0">@stanza.Nome</h5>
+                            </div>
+                            <span class="badge rounded-pill px-2.5 py-1 fs-9 fw-semibold @(isFocus ? "bg-success-light text-success" : "bg-warning-light text-warning")">
+                                <i class="fa-solid fa-circle me-1 fs-10"></i>@(isFocus ? "Attiva" : "Pausa")
+                            </span>
+                        </div>
+
+                        <!-- Info Grid -->
+                        <div class="my-3 py-2 border-top border-bottom border-light">
+                            <div class="row text-center">
+                                <div class="col-6 border-end border-light">
+                                    <span class="text-muted small d-block">Membri</span>
+                                    <span class="fw-bold text-dark"><i class="fa-solid fa-users text-primary me-1"></i>@stanza.OnlineCount/@stanza.MaxCapacity</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-muted small d-block">Pomodoro</span>
+                                    <span class="fw-bold text-dark"><i class="fa-regular fa-clock text-warning me-1"></i>@string.Format("{0:00}:{1:00}", stanza.TempoRimanente.Minutes, stanza.TempoRimanente.Seconds)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer / Actions -->
+                        <div class="mt-auto pt-3">
+                            <a href="@Url.Action("Room", "StanzeStudio", new { id = stanza.Id })" class="btn btn-primary w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center">
+                                Entra nella Stanza <i class="fa-solid fa-right-to-bracket ms-2 fs-7"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Create Room Modal -->
+<div class="modal fade" id="createRoomModal" tabindex="-1" aria-labelledby="createRoomModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark" id="createRoomModalLabel">Crea Stanza di Studio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="@Url.Action("Create", "StanzeStudio")" autocomplete="off">
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label for="roomName" class="form-label fw-semibold small text-dark">Nome della Stanza</label>
+                        <input type="text" class="form-control rounded-3" id="roomName" name="name" placeholder="Es. Aula Studio Analisi 1, Pomodoro Chimica" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="corsoSelect" class="form-label fw-semibold small text-dark">Materia di riferimento</label>
+                        <select class="form-select rounded-3" id="corsoSelect" name="corsoId" required>
+                            @foreach (var corso in Model.Corsi)
+                            {
+                                <option value="@corso.Id">@corso.Nome</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="timerSelect" class="form-label fw-semibold small text-dark">Durata sessione Pomodoro (Minuti)</label>
+                        <select class="form-select rounded-3" id="timerSelect" name="durationMinutes">
+                            <option value="25">25 minuti (Classico)</option>
+                            <option value="50">50 minuti (Lungo)</option>
+                            <option value="15">15 minuti (Short)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annulla</button>
+                    <button type="submit" class="btn btn-primary rounded-3 px-4">Crea ed Entra</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

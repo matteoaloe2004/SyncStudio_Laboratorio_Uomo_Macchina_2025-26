@@ -130,6 +130,8 @@ namespace Template.Web
 
                 endpoints.MapAreaControllerRoute("Example", "Example", "Example/{controller=Users}/{action=Index}/{id?}");
                 endpoints.MapControllerRoute("appunti", "Appunti", new { controller = "Appunti", action = "Index" });
+                endpoints.MapControllerRoute("stanzeStudioRoom", "StanzeStudio/Room/{id}", new { controller = "StanzeStudio", action = "Room" });
+                endpoints.MapControllerRoute("stanzeStudio", "StanzeStudio", new { controller = "StanzeStudio", action = "Index" });
                 endpoints.MapControllerRoute("default", "{controller=Login}/{action=Login}/{id?}");
             });
         }
