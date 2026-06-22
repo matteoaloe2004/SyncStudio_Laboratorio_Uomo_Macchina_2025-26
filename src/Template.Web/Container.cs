@@ -1,7 +1,7 @@
-﻿using Template.Services.Shared;
-using Microsoft.Extensions.DependencyInjection;
 using Template.Services.Shared;
+using Microsoft.Extensions.DependencyInjection;
 using Template.Web.SignalR;
+using Template.Web.Features.StanzeStudio;
 
 namespace Template.Web
 {
@@ -15,6 +15,9 @@ namespace Template.Web
 
             // Registration of SignalR events
             container.AddScoped<IPublishDomainEvents, SignalrPublishDomainEvents>();
+
+            // Study Rooms State Manager Singleton
+            container.AddSingleton<IRoomStateManager, RoomStateManager>();
         }
     }
 }
