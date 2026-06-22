@@ -1,5 +1,6 @@
 ﻿using Template.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Template.Infrastructure;
 using Template.Services.Shared;
 
 namespace Template.Services
@@ -12,7 +13,20 @@ namespace Template.Services
 
         public TemplateDbContext(DbContextOptions<TemplateDbContext> options) : base(options)
         {
-            DataGenerator.InitializeUsers(this);
+            // Nota: DataGenerator è chiamato solo se il database è operativo.
+            // Durante le migrations, questo non sarà eseguito poiché il schema non esiste ancora.
+            try
+            {
+                // Verifica se il database esiste e può essere raggiunto
+                if (Database.CanConnect())
+                {
+                    DataGenerator.InitializeUsers(this);
+                }
+            }
+            catch
+            {
+                // Se il database non è disponibile (es. durante migrations), ignora l'errore
+            }
         }
 
         public DbSet<User> Users { get; set; }

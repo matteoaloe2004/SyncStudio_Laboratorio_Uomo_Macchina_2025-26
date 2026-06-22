@@ -32,12 +32,13 @@ namespace Template.Web
         {
             services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
 
+            // --- CORREZIONE: CONFIGURAZIONE MYSQL ---
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<TemplateDbContext>(options =>
-            {
-                options.UseInMemoryDatabase(databaseName: "Template");
-            });
+                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+            // ----------------------------------------
 
-            // SERVICES FOR AUTHENTICATION
+            // ... il resto del metodo rimane identico ...
             services.AddSession();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
             {
@@ -48,7 +49,7 @@ namespace Template.Web
             var builder = services.AddMvc()
                 .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
                 .AddDataAnnotationsLocalization(options =>
-                {                        // Enable loading SharedResource for ModelLocalizer
+                {
                     options.DataAnnotationLocalizerProvider = (type, factory) =>
                         factory.Create(typeof(SharedResource));
                 });
@@ -57,6 +58,7 @@ namespace Template.Web
             builder.AddRazorRuntimeCompilation();
 #endif
 
+            // ... (Mantieni tutto il blocco di configurazione RazorViewEngineOptions intatto) ...
             services.Configure<RazorViewEngineOptions>(options =>
             {
                 options.AreaViewLocationFormats.Clear();
@@ -72,10 +74,7 @@ namespace Template.Web
                 options.ViewLocationFormats.Add("/Views/Shared/{0}.cshtml");
             });
 
-            // SIGNALR FOR COLLABORATIVE PAGES
             services.AddSignalR();
-
-            // CONTAINER FOR ALL EXTRA CUSTOM SERVICES
             Container.RegisterTypes(services);
         }
 
