@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Threading.Tasks;
+using Template.Services;
 using Template.Web.Features.StanzeStudio;
 
 namespace Template.Web.SignalR.Hubs
@@ -15,6 +17,7 @@ namespace Template.Web.SignalR.Hubs
         Task ReceiveChatMessage(string userName, string text, string time);
         Task TimerUpdated(bool isRunning, int remainingSeconds, bool isBreak);
         Task TasksUpdated(System.Collections.Generic.List<RoomTask> tasks);
+        Task LobbyRoomUpdated(Guid roomId, string nome, string corsoNome, Guid corsoId, int onlineCount, int remainingSeconds, bool isRunning, bool isBreak);
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
@@ -22,11 +25,13 @@ namespace Template.Web.SignalR.Hubs
     {
         private readonly IPublishDomainEvents _publisher;
         private readonly IRoomStateManager _roomStateManager;
+        private readonly TemplateDbContext _dbContext;
 
-        public TemplateHub(IPublishDomainEvents publisher, IRoomStateManager roomStateManager)
+        public TemplateHub(IPublishDomainEvents publisher, IRoomStateManager roomStateManager, TemplateDbContext dbContext)
         {
             _publisher = publisher;
             _roomStateManager = roomStateManager;
+            _dbContext = dbContext;
         }
 
         public async Task JoinGroup(Guid idGroup)
@@ -40,6 +45,35 @@ namespace Template.Web.SignalR.Hubs
         }
 
         // ================= Stanze Studio Hub Actions =================
+
+        public async Task JoinLobby()
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, "Lobby");
+        }
+
+        public async Task LeaveLobby()
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "Lobby");
+        }
+
+        private async Task NotifyLobbyOfRoomUpdate(Guid roomId)
+        {
+            var state = _roomStateManager.GetOrCreateState(roomId);
+            var roomDb = await _dbContext.StanzeStudio.Include(x => x.Corso).FirstOrDefaultAsync(x => x.Id == roomId);
+            if (roomDb != null)
+            {
+                await Clients.Group("Lobby").LobbyRoomUpdated(
+                    roomId,
+                    roomDb.Nome,
+                    roomDb.Corso != null ? roomDb.Corso.Nome : "Materia",
+                    roomDb.CorsoId,
+                    state.Participants.Count,
+                    state.RemainingSeconds,
+                    state.IsTimerRunning,
+                    state.IsBreak
+                );
+            }
+        }
 
         public async Task JoinRoom(Guid roomId, string userName)
         {
@@ -60,6 +94,9 @@ namespace Template.Web.SignalR.Hubs
 
             // 2. Broadcast user join to everyone in the room (including their updated list of participants)
             await Clients.Group(roomId.ToString()).UserJoined(userName, state.Participants);
+
+            // 3. Update the Lobby group with new online count
+            await NotifyLobbyOfRoomUpdate(roomId);
         }
 
         public async Task LeaveRoom(Guid roomId, string userName)
@@ -69,6 +106,9 @@ namespace Template.Web.SignalR.Hubs
 
             var participants = _roomStateManager.GetParticipants(roomId);
             await Clients.Group(roomId.ToString()).UserLeft(userName, participants);
+
+            // Update the Lobby group with new online count
+            await NotifyLobbyOfRoomUpdate(roomId);
         }
 
         public async Task SendChatMessage(Guid roomId, string userName, string text)
@@ -89,6 +129,9 @@ namespace Template.Web.SignalR.Hubs
         {
             _roomStateManager.UpdateTimer(roomId, isRunning, remainingSeconds, isBreak);
             await Clients.Group(roomId.ToString()).TimerUpdated(isRunning, remainingSeconds, isBreak);
+
+            // Update the Lobby group
+            await NotifyLobbyOfRoomUpdate(roomId);
         }
 
         public async Task AddTask(Guid roomId, string text)
@@ -129,6 +172,9 @@ namespace Template.Web.SignalR.Hubs
             {
                 var participants = _roomStateManager.GetParticipants(info.Value.RoomId);
                 await Clients.Group(info.Value.RoomId.ToString()).UserLeft(info.Value.UserName, participants);
+
+                // Update the Lobby group with new online count
+                await NotifyLobbyOfRoomUpdate(info.Value.RoomId);
             }
             await base.OnDisconnectedAsync(exception);
         }

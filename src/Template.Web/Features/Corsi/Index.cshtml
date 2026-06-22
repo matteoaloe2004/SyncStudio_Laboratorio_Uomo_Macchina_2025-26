@@ -1,0 +1,133 @@
+@model Template.Web.Features.Corsi.CorsiViewModel
+@{
+    ViewData["Title"] = "Gestione Corsi";
+}
+
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="fw-bold text-dark mb-1">Gestione Corsi</h1>
+            <p class="text-secondary mb-0">Visualizza, aggiungi ed elimina i corsi della piattaforma StudySync</p>
+        </div>
+    </div>
+
+    <!-- Feedback Alerts -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i>@Html.Raw(TempData["SuccessMessage"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>@Html.Raw(TempData["ErrorMessage"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Left Side: Add Course Form -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-plus text-primary me-2"></i>Aggiungi Nuovo Corso</h5>
+                
+                <form method="post" action="@Url.Action("Create", "Corsi")" autocomplete="off">
+                    <div class="mb-3">
+                        <label for="corsoNome" class="form-label fw-semibold small text-dark">Nome del Corso</label>
+                        <input type="text" class="form-control rounded-3" id="corsoNome" name="nome" placeholder="Es. Geometria 2, Sistemi Operativi" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="corsoAnno" class="form-label fw-semibold small text-dark">Anno di Studio</label>
+                        <select class="form-select rounded-3" id="corsoAnno" name="anno" required>
+                            <option value="1">1° Anno</option>
+                            <option value="2">2° Anno</option>
+                            <option value="3">3° Anno</option>
+                        </select>
+                    </div>
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary rounded-3 fw-semibold py-2 shadow-sm">
+                            <i class="fa-solid fa-circle-plus me-2"></i>Salva Corso
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side: Courses List -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-book-open text-primary me-2"></i>Elenco dei Corsi</h5>
+
+                @if (Model.Corsi == null || Model.Corsi.Count == 0)
+                {
+                    <div class="text-center py-5">
+                        <i class="fa-solid fa-folder-open fs-1 text-muted opacity-40 mb-3"></i>
+                        <h6 class="fw-bold text-secondary">Nessun corso inserito</h6>
+                        <p class="text-muted small">Usa il modulo a sinistra per aggiungere il primo corso.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col" class="border-0 rounded-start-3 text-dark fw-bold">Corso</th>
+                                    <th scope="col" class="border-0 text-dark fw-bold">Anno</th>
+                                    <th scope="col" class="border-0 text-center text-dark fw-bold">Appunti</th>
+                                    <th scope="col" class="border-0 class text-center text-dark fw-bold">Stanze</th>
+                                    <th scope="col" class="border-0 rounded-end-3 text-end text-dark fw-bold px-3">Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var corso in Model.Corsi.OrderBy(c => c.Anno).ThenBy(c => c.Nome))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="fw-semibold text-dark">@corso.Nome</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary-light text-secondary rounded-pill px-2.5 py-1 fw-semibold">
+                                                @corso.Anno° Anno
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary-light text-primary rounded-pill px-2.5 py-1 fw-semibold">
+                                                @corso.AppuntiCount
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success-light text-success rounded-pill px-2.5 py-1 fw-semibold">
+                                                @corso.StanzeCount
+                                            </span>
+                                        </td>
+                                        <td class="text-end px-3">
+                                            @if (corso.CanDelete)
+                                            {
+                                                <form method="post" action="@Url.Action("Delete", "Corsi")" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare il corso &quot;@corso.Nome&quot;?');">
+                                                    <input type="hidden" name="id" value="@corso.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-3 border-0 px-2 py-1.5 hover-bg-danger-light" title="Elimina corso">
+                                                        <i class="fa-solid fa-trash-can"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm text-muted rounded-3 border-0 px-2 py-1.5 opacity-50" style="cursor: not-allowed;" title="Non eliminabile: in uso" disabled>
+                                                    <i class="fa-solid fa-lock"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -30,11 +30,13 @@ namespace Template.Web.Features.StanzeStudio
     {
         private readonly TemplateDbContext _dbContext;
         private readonly SharedService _sharedService;
+        private readonly IRoomStateManager _roomStateManager;
 
-        public StanzeStudioController(TemplateDbContext dbContext, SharedService sharedService)
+        public StanzeStudioController(TemplateDbContext dbContext, SharedService sharedService, IRoomStateManager roomStateManager)
         {
             _dbContext = dbContext;
             _sharedService = sharedService;
+            _roomStateManager = roomStateManager;
         }
 
         [HttpGet]
@@ -47,6 +49,12 @@ namespace Template.Web.Features.StanzeStudio
             var filteredStanze = new List<StanzaStudioDTO>();
             foreach (var s in stanze)
             {
+                // Sync dynamic state from RoomStateManager
+                var state = _roomStateManager.GetOrCreateState(s.Id);
+                s.OnlineCount = state.Participants.Count;
+                s.TempoRimanente = TimeSpan.FromSeconds(state.RemainingSeconds);
+                s.IsInEsecuzione = state.IsTimerRunning;
+
                 bool matchSearch = string.IsNullOrEmpty(searchTerm) || 
                                    s.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                                    s.CorsoNome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);

@@ -390,6 +390,10 @@
                                 clearInterval(this.timerInterval);
                                 this.timerInterval = null;
                                 this.isTimerRunning = false;
+
+                                // Sync the expired/stopped state with the server
+                                this.connection.invoke('UpdateTimer', this.roomId, false, 0, this.isBreak)
+                                    .catch(err => console.error(err));
                                 
                                 // Auto transition modes for local notification
                                 if (window.Notification && Notification.permission === "granted") {

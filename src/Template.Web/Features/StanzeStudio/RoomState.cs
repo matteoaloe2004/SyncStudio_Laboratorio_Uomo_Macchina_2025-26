@@ -26,8 +26,27 @@ namespace Template.Web.Features.StanzeStudio
         public List<RoomChatMessage> Messages { get; set; } = new List<RoomChatMessage>();
         public List<string> Participants { get; set; } = new List<string>();
         public bool IsTimerRunning { get; set; }
-        public int RemainingSeconds { get; set; } = 25 * 60;
+        public DateTime? TimerStartedAt { get; set; }
+        public int SecondsAtStart { get; set; } = 25 * 60;
         public bool IsBreak { get; set; }
+
+        public int RemainingSeconds
+        {
+            get
+            {
+                if (!IsTimerRunning || !TimerStartedAt.HasValue)
+                {
+                    return SecondsAtStart;
+                }
+                var elapsed = (int)(DateTime.UtcNow - TimerStartedAt.Value).TotalSeconds;
+                var remaining = SecondsAtStart - elapsed;
+                return remaining > 0 ? remaining : 0;
+            }
+            set
+            {
+                SecondsAtStart = value;
+            }
+        }
     }
 
     public interface IRoomStateManager
@@ -134,8 +153,17 @@ namespace Template.Web.Features.StanzeStudio
             lock (state)
             {
                 state.IsTimerRunning = isRunning;
-                state.RemainingSeconds = remainingSeconds;
                 state.IsBreak = isBreak;
+                if (isRunning)
+                {
+                    state.TimerStartedAt = DateTime.UtcNow;
+                    state.SecondsAtStart = remainingSeconds;
+                }
+                else
+                {
+                    state.TimerStartedAt = null;
+                    state.SecondsAtStart = remainingSeconds;
+                }
             }
         }
 

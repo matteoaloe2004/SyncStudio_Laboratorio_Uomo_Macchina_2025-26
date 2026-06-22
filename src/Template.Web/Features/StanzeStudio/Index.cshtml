@@ -3,7 +3,7 @@
     ViewData["Title"] = "Stanze di Studio";
 }
 
-<div class="container py-4">
+<div id="app-lobby" class="container py-4" v-cloak>
     <!-- Header Section -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
@@ -35,86 +35,76 @@
 
     <!-- Search & Filters -->
     <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
-        <form method="get" action="@Url.Action("Index", "StanzeStudio")" class="row g-3 align-items-center">
+        <!form @@submit.prevent class="row g-3 align-items-center">
             <div class="col-md-5">
                 <div class="input-group">
                     <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="text" name="searchTerm" class="form-control bg-light border-start-0" placeholder="Cerca per nome stanza o materia..." value="@Model.SearchTerm" />
+                    <input type="text" v-model="searchTerm" class="form-control bg-light border-start-0" placeholder="Cerca per nome stanza o materia..." />
                 </div>
             </div>
-            <div class="col-md-4">
-                <select name="corsoId" class="form-select bg-light">
+            <div class="col-md-5">
+                <select v-model="selectedCorsoId" class="form-select bg-light">
                     <option value="">Tutte le materie</option>
                     @foreach (var corso in Model.Corsi)
                     {
-                        <!option value="@corso.Id" @(Model.SelectedCorsoId == corso.Id ? "selected" : "")>@corso.Nome</!option>
+                        <option value="@corso.Id">@corso.Nome</option>
                     }
                 </select>
             </div>
-            <div class="col-md-3 d-grid">
-                <button type="submit" class="btn btn-secondary rounded-3"><i class="fa-solid fa-filter me-2"></i>Filtra</button>
+            <div class="col-md-2 d-grid">
+                <button type="button" @@click="searchTerm = ''; selectedCorsoId = '';" class="btn btn-outline-secondary rounded-3"><i class="fa-solid fa-filter-circle-xmark me-2"></i>Reset</button>
             </div>
-        </form>
+        </!form>
     </div>
 
     <!-- Rooms List Grid -->
-    @if (Model.Stanze == null || Model.Stanze.Count == 0)
-    {
-        <div class="card border-0 shadow-sm rounded-4 text-center p-5 bg-white">
-            <div class="py-4">
-                <i class="fa-solid fa-ghost fs-1 text-muted mb-3 opacity-50"></i>
-                <h5 class="fw-bold text-dark">Nessuna stanza trovata</h5>
-                <p class="text-secondary max-w-md mx-auto">Non ci sono stanze di studio attive per i criteri di ricerca impostati. Crea una nuova stanza per iniziare!</p>
-                <button class="btn btn-primary rounded-pill shadow-sm px-4 mt-2" data-bs-toggle="modal" data-bs-target="#createRoomModal">
-                    <i class="fa-solid fa-plus me-2"></i>Crea la prima stanza
-                </button>
-            </div>
+    <div v-if="filteredStanze.length === 0" class="card border-0 shadow-sm rounded-4 text-center p-5 bg-white">
+        <div class="py-4">
+            <i class="fa-solid fa-ghost fs-1 text-muted mb-3 opacity-50"></i>
+            <h5 class="fw-bold text-dark">Nessuna stanza trovata</h5>
+            <p class="text-secondary max-w-md mx-auto">Non ci sono stanze di studio attive per i criteri di ricerca impostati. Crea una nuova stanza per iniziare!</p>
+            <button class="btn btn-primary rounded-pill shadow-sm px-4 mt-2" data-bs-toggle="modal" data-bs-target="#createRoomModal">
+                <i class="fa-solid fa-plus me-2"></i>Crea la prima stanza
+            </button>
         </div>
-    }
-    else
-    {
-        <div class="row g-4">
-            @foreach (var stanza in Model.Stanze)
-            {
-                var isFocus = stanza.IsInEsecuzione;
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white p-4 d-flex flex-column position-relative transition-all hover-translate-y">
-                        <!-- Upper Section -->
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <span class="badge bg-primary-light text-primary rounded-pill px-2.5 py-1 fs-8 fw-semibold mb-2">@stanza.CorsoNome</span>
-                                <h5 class="fw-bold text-dark mb-0">@stanza.Nome</h5>
-                            </div>
-                            <span class="badge rounded-pill px-2.5 py-1 fs-9 fw-semibold @(isFocus ? "bg-success-light text-success" : "bg-warning-light text-warning")">
-                                <i class="fa-solid fa-circle me-1 fs-10"></i>@(isFocus ? "Attiva" : "Pausa")
-                            </span>
-                        </div>
+    </div>
+    <div v-else class="row g-4">
+        <div v-for="stanza in filteredStanze" :key="stanza.id" class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white p-4 d-flex flex-column position-relative transition-all hover-translate-y">
+                <!-- Upper Section -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <span class="badge bg-primary-light text-primary rounded-pill px-2.5 py-1 fs-8 fw-semibold mb-2">{{ stanza.corsoNome }}</span>
+                        <h5 class="fw-bold text-dark mb-0">{{ stanza.nome }}</h5>
+                    </div>
+                    <span class="badge rounded-pill px-2.5 py-1 fs-9 fw-semibold" :class="stanza.isTimerRunning ? 'bg-success-light text-success' : 'bg-warning-light text-warning'">
+                        <i class="fa-solid fa-circle me-1 fs-10"></i>{{ stanza.isTimerRunning ? (stanza.isBreak ? 'Pausa' : 'Studio') : 'In Pausa' }}
+                    </span>
+                </div>
 
-                        <!-- Info Grid -->
-                        <div class="my-3 py-2 border-top border-bottom border-light">
-                            <div class="row text-center">
-                                <div class="col-6 border-end border-light">
-                                    <span class="text-muted small d-block">Membri</span>
-                                    <span class="fw-bold text-dark"><i class="fa-solid fa-users text-primary me-1"></i>@stanza.OnlineCount/@stanza.MaxCapacity</span>
-                                </div>
-                                <div class="col-6">
-                                    <span class="text-muted small d-block">Pomodoro</span>
-                                    <span class="fw-bold text-dark"><i class="fa-regular fa-clock text-warning me-1"></i>@string.Format("{0:00}:{1:00}", stanza.TempoRimanente.Minutes, stanza.TempoRimanente.Seconds)</span>
-                                </div>
-                            </div>
+                <!-- Info Grid -->
+                <div class="my-3 py-2 border-top border-bottom border-light">
+                    <div class="row text-center">
+                        <div class="col-6 border-end border-light">
+                            <span class="text-muted small d-block">Membri</span>
+                            <span class="fw-bold text-dark"><i class="fa-solid fa-users text-primary me-1"></i>{{ stanza.onlineCount }}/{{ stanza.maxCapacity }}</span>
                         </div>
-
-                        <!-- Footer / Actions -->
-                        <div class="mt-auto pt-3">
-                            <a href="@Url.Action("Room", "StanzeStudio", new { id = stanza.Id })" class="btn btn-primary w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center">
-                                Entra nella Stanza <i class="fa-solid fa-right-to-bracket ms-2 fs-7"></i>
-                            </a>
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Pomodoro</span>
+                            <span class="fw-bold text-dark"><i class="fa-regular fa-clock text-warning me-1"></i>{{ formatTime(stanza.remainingSeconds) }}</span>
                         </div>
                     </div>
                 </div>
-            }
+
+                <!-- Footer / Actions -->
+                <div class="mt-auto pt-3">
+                    <a :href="'/StanzeStudio/Room/' + stanza.id" class="btn btn-primary w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center">
+                        Entra nella Stanza <i class="fa-solid fa-right-to-bracket ms-2 fs-7"></i>
+                    </a>
+                </div>
+            </div>
         </div>
-    }
+    </div>
 </div>
 
 <!-- Create Room Modal -->
@@ -157,3 +147,105 @@
         </div>
     </div>
 </div>
+
+@section scripts {
+    <!-- SignalR client library -->
+    <script src="~/js/bundle-signalr.js"></script>
+    <script src="~/js/bundle-vue.js"></script>
+    <script>
+        const initialStanze = @Html.Raw(Json.Serialize(Model.Stanze.Select(s => new {
+            id = s.Id,
+            nome = s.Nome,
+            corsoNome = s.CorsoNome,
+            corsoId = s.CorsoId.ToString(),
+            onlineCount = s.OnlineCount,
+            maxCapacity = s.MaxCapacity,
+            remainingSeconds = (int)s.TempoRimanente.TotalSeconds,
+            isTimerRunning = s.IsInEsecuzione,
+            isBreak = false
+        })));
+
+        new Vue({
+            el: '#app-lobby',
+            data: {
+                stanze: initialStanze,
+                searchTerm: '',
+                selectedCorsoId: '',
+                connection: null
+            },
+            computed: {
+                filteredStanze() {
+                    return this.stanze.filter(s => {
+                        const matchSearch = !this.searchTerm.trim() || 
+                            s.nome.toLowerCase().includes(this.searchTerm.toLowerCase()) || 
+                            s.corsoNome.toLowerCase().includes(this.searchTerm.toLowerCase());
+                        const matchCorso = !this.selectedCorsoId || s.corsoId === this.selectedCorsoId;
+                        return matchSearch && matchCorso;
+                    });
+                }
+            },
+            methods: {
+                initSignalR() {
+                    this.connection = new signalR.HubConnectionBuilder()
+                        .withUrl('/templateHub')
+                        .withAutomaticReconnect()
+                        .configureLogging(signalR.LogLevel.Error)
+                        .build();
+
+                    this.connection.on('LobbyRoomUpdated', (roomId, nome, corsoNome, corsoId, onlineCount, remainingSeconds, isRunning, isBreak) => {
+                        let room = this.stanze.find(s => s.id === roomId);
+                        if (room) {
+                            room.onlineCount = onlineCount;
+                            room.remainingSeconds = remainingSeconds;
+                            room.isTimerRunning = isRunning;
+                            room.isBreak = isBreak;
+                        } else {
+                            this.stanze.push({
+                                id: roomId,
+                                nome: nome,
+                                corsoNome: corsoNome,
+                                corsoId: corsoId,
+                                onlineCount: onlineCount,
+                                maxCapacity: 8,
+                                remainingSeconds: remainingSeconds,
+                                isTimerRunning: isRunning,
+                                isBreak: isBreak
+                            });
+                        }
+                    });
+
+                    this.connection.start()
+                        .then(() => {
+                            console.log("SignalR connected to Hub from Lobby");
+                            this.connection.invoke('JoinLobby')
+                                .catch(err => console.error("Error joining lobby:", err));
+                        })
+                        .catch(err => console.error("SignalR Connection Error in Lobby:", err));
+                },
+                formatTime(seconds) {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+            },
+            mounted() {
+                this.initSignalR();
+
+                // Periodic countdown interval for running timers
+                setInterval(() => {
+                    this.stanze.forEach(s => {
+                        if (s.isTimerRunning && s.remainingSeconds > 0) {
+                            s.remainingSeconds--;
+                        }
+                    });
+                }, 1000);
+            },
+            beforeDestroy() {
+                if (this.connection) {
+                    this.connection.invoke('LeaveLobby')
+                        .catch(err => console.error(err));
+                }
+            }
+        });
+    </script>
+}
