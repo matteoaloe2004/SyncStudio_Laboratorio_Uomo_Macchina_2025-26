@@ -1,4 +1,4 @@
-﻿//using Template.Web.Hubs;
+//using Template.Web.Hubs;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -83,6 +83,20 @@ namespace Template.Web
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            // Esegui le migrazioni del database all'avvio
+            using (var scope = app.ApplicationServices.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<TemplateDbContext>();
+                try
+                {
+                    dbContext.Database.Migrate();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Errore durante la migrazione del database: {ex.Message}");
+                }
+            }
+
             // Configure the HTTP request pipeline.
             if (!env.IsDevelopment())
             {
