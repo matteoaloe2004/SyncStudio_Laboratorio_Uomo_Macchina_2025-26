@@ -23,5 +23,12 @@ namespace Template.Services.Shared
         public Guid CorsoId { get; set; }
 
         public Corso Corso { get; set; }
+
+        public int MaxCapacity { get; set; } = 8;
+
+        public string Password { get; set; }
+
+        [NotMapped]
+        public bool IsPrivate => !string.IsNullOrEmpty(Password);
     }
 }

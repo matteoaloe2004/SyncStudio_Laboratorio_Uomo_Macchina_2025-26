@@ -24,6 +24,8 @@ namespace Template.Web.Features.StanzeStudio
         public string CorsoName { get; set; }
         public string UserNickname { get; set; }
         public int DefaultDurationMinutes { get; set; }
+        public bool IsPrivate { get; set; }
+        public int MaxCapacity { get; set; }
     }
 
     public partial class StanzeStudioController : AuthenticatedBaseController
@@ -78,7 +80,7 @@ namespace Template.Web.Features.StanzeStudio
         }
 
         [HttpGet]
-        public async virtual Task<IActionResult> Room(Guid id)
+        public async virtual Task<IActionResult> Room(Guid id, string pwd)
         {
             var stanza = await _dbContext.StanzeStudio
                 .Include(x => x.Corso)
@@ -87,6 +89,16 @@ namespace Template.Web.Features.StanzeStudio
             if (stanza == null)
             {
                 return NotFound();
+            }
+
+            // If private room and no/wrong password, show password form
+            if (stanza.IsPrivate && stanza.Password != pwd)
+            {
+                ViewData["RoomId"] = id;
+                ViewData["RoomName"] = stanza.Nome;
+                ViewData["CorsoName"] = stanza.Corso?.Nome ?? "Materia";
+                ViewData["WrongPassword"] = !string.IsNullOrEmpty(pwd);
+                return View("RoomPassword");
             }
 
             var userIdString = HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -106,14 +118,16 @@ namespace Template.Web.Features.StanzeStudio
                 RoomName = stanza.Nome,
                 CorsoName = stanza.Corso != null ? stanza.Corso.Nome : "Materia",
                 UserNickname = nickname,
-                DefaultDurationMinutes = (int)stanza.TempoRimanente.TotalMinutes
+                DefaultDurationMinutes = (int)stanza.TempoRimanente.TotalMinutes,
+                IsPrivate = stanza.IsPrivate,
+                MaxCapacity = stanza.MaxCapacity
             };
 
             return View(model);
         }
 
         [HttpPost]
-        public async virtual Task<IActionResult> Create(string name, Guid corsoId, int durationMinutes)
+        public async virtual Task<IActionResult> Create(string name, Guid corsoId, int durationMinutes, int maxCapacity, string password)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -126,19 +140,31 @@ namespace Template.Web.Features.StanzeStudio
                 durationMinutes = 25; // default to 25 mins
             }
 
+            if (maxCapacity < 2 || maxCapacity > 20)
+            {
+                maxCapacity = 8; // default
+            }
+
             var newStanza = new StanzaStudio
             {
                 Id = Guid.NewGuid(),
                 Nome = name,
                 TempoRimanente = TimeSpan.FromMinutes(durationMinutes),
                 IsInEsecuzione = false,
-                CorsoId = corsoId
+                CorsoId = corsoId,
+                MaxCapacity = maxCapacity,
+                Password = string.IsNullOrWhiteSpace(password) ? null : password.Trim()
             };
 
             _dbContext.StanzeStudio.Add(newStanza);
             await _dbContext.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Stanza '{name}' creata con successo!";
+            // If private, redirect with pwd so creator can enter
+            if (newStanza.IsPrivate)
+            {
+                return RedirectToAction(nameof(Room), new { id = newStanza.Id, pwd = newStanza.Password });
+            }
             return RedirectToAction(nameof(Room), new { id = newStanza.Id });
         }
     }

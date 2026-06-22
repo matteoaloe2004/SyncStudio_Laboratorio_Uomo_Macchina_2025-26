@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Linq;
 
 using Template.Web.Areas;
 using Template.Services.Shared;
+using Template.Web.Features.StanzeStudio;
 using System.Threading.Tasks;
 
 namespace Template.Web.Features.Home
@@ -12,10 +14,12 @@ namespace Template.Web.Features.Home
     public partial class HomeController : AuthenticatedBaseController
     {
         private readonly SharedService _sharedService;
+        private readonly IRoomStateManager _roomStateManager;
 
-        public HomeController(SharedService sharedService)
+        public HomeController(SharedService sharedService, IRoomStateManager roomStateManager)
         {
             _sharedService = sharedService;
+            _roomStateManager = roomStateManager;
         }
 
         [HttpGet]
@@ -35,11 +39,30 @@ namespace Template.Web.Features.Home
                 }
             }
 
+            // Sync real-time state from RoomStateManager
+            int totalOnline = 0;
+            foreach (var s in stanze)
+            {
+                var state = _roomStateManager.GetOrCreateState(s.Id);
+                s.OnlineCount = state.Participants.Count;
+                s.TempoRimanente = TimeSpan.FromSeconds(state.RemainingSeconds);
+                s.IsInEsecuzione = state.IsTimerRunning;
+                totalOnline += s.OnlineCount;
+            }
+
+            // Recommended room: the one with the most participants > 0
+            StanzaStudioDTO consigliata = stanze
+                .Where(s => s.OnlineCount > 0)
+                .OrderByDescending(s => s.OnlineCount)
+                .FirstOrDefault();
+
             var model = new HomeViewModel
             {
                 Corsi = corsi,
                 Stanze = stanze,
-                NickName = nickname
+                NickName = nickname,
+                TotalStudentiOnline = totalOnline,
+                StanzaConsigliata = consigliata
             };
 
             return View(model);

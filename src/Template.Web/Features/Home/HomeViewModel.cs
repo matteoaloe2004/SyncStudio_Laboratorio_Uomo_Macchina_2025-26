@@ -8,5 +8,7 @@ namespace Template.Web.Features.Home
         public List<CorsoDTO> Corsi { get; set; }
         public List<StanzaStudioDTO> Stanze { get; set; }
         public string NickName { get; set; }
+        public int TotalStudentiOnline { get; set; }
+        public StanzaStudioDTO StanzaConsigliata { get; set; }
     }
 }

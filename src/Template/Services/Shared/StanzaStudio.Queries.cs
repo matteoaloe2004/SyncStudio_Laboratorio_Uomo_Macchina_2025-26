@@ -18,6 +18,7 @@ namespace Template.Services.Shared
         public string CorsoNome { get; set; }
         public int OnlineCount { get; set; }
         public int MaxCapacity { get; set; }
+        public bool IsPrivate { get; set; }
     }
 
     public partial class SharedService
@@ -30,19 +31,8 @@ namespace Template.Services.Shared
                 .ToListAsync();
 
             var result = new List<StanzaStudioDTO>();
-            int index = 1;
             foreach (var s in list)
             {
-                // Assign a nice mock capacity and online count for aesthetics
-                int mockOnline = (index % 3 == 0) ? 2 : (index % 2 == 0) ? 3 : 5;
-                int mockCapacity = 8;
-                if (s.Nome.Contains("Fisica")) { mockOnline = 3; mockCapacity = 5; }
-                else if (s.Nome.Contains("Analisi")) { mockOnline = 5; mockCapacity = 8; }
-                else if (s.Nome.Contains("Algebra")) { mockOnline = 7; mockCapacity = 10; }
-                else if (s.Nome.Contains("Chimica")) { mockOnline = 2; mockCapacity = 4; }
-                else if (s.Nome.Contains("Probabilità")) { mockOnline = 4; mockCapacity = 8; }
-                else if (s.Nome.Contains("Geometria")) { mockOnline = 4; mockCapacity = 8; }
-
                 result.Add(new StanzaStudioDTO
                 {
                     Id = s.Id,
@@ -51,10 +41,10 @@ namespace Template.Services.Shared
                     IsInEsecuzione = s.IsInEsecuzione,
                     CorsoId = s.CorsoId,
                     CorsoNome = s.Corso != null ? s.Corso.Nome : "Materia",
-                    OnlineCount = mockOnline,
-                    MaxCapacity = mockCapacity
+                    OnlineCount = 0,
+                    MaxCapacity = s.MaxCapacity,
+                    IsPrivate = s.IsPrivate
                 });
-                index++;
             }
 
             return result;
