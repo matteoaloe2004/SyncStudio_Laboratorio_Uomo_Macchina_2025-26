@@ -1,15 +1,16 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Template.Web.Features.Login
 {
     public class LoginViewModel
     {
-        [Required]
+        [Required(ErrorMessage = "L'email è obbligatoria")]
+        [EmailAddress(ErrorMessage = "Inserisci un indirizzo email valido")]
         [Display(Name = "Email")]
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "La password è obbligatoria")]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
         public string Password { get; set; }

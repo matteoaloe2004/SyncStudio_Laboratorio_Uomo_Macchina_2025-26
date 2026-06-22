@@ -11,9 +11,16 @@ namespace Template.Web.Features.Login
 
         [Required(ErrorMessage = "La password è obbligatoria")]
         [DataType(DataType.Password)]
-        [MinLength(4, ErrorMessage = "La password deve contenere almeno 4 caratteri")]
+        [MinLength(8, ErrorMessage = "La password deve contenere almeno 8 caratteri")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$", ErrorMessage = "La password deve contenere almeno una lettera maiuscola, una minuscola e un numero.")]
         [Display(Name = "Password")]
         public string Password { get; set; }
+
+        [Required(ErrorMessage = "La conferma della password è obbligatoria")]
+        [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "Le password inserite non coincidono")]
+        [Display(Name = "Conferma Password")]
+        public string ConfirmPassword { get; set; }
 
         [Required(ErrorMessage = "Il nome è obbligatorio")]
         [Display(Name = "Nome")]

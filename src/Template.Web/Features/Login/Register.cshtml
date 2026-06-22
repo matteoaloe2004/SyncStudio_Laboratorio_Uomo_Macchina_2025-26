@@ -47,13 +47,22 @@
                 </div>
             </div>
 
-            <div class="mb-4">
+            <div class="mb-3">
                 <label asp-for="Password" class="form-label small fw-semibold text-secondary">Password</label>
                 <div class="input-group">
                     <span class="input-group-text border-end-0 bg-transparent text-muted"><i class="fa-solid fa-lock"></i></span>
                     <input asp-for="Password" class="form-control border-start-0 ps-0" placeholder="Crea una password" required />
                 </div>
                 <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="ConfirmPassword" class="form-label small fw-semibold text-secondary">Conferma Password</label>
+                <div class="input-group">
+                    <span class="input-group-text border-end-0 bg-transparent text-muted"><i class="fa-solid fa-lock"></i></span>
+                    <input asp-for="ConfirmPassword" class="form-control border-start-0 ps-0" placeholder="Ripeti la password" required />
+                </div>
+                <span asp-validation-for="ConfirmPassword" class="text-danger small mt-1 d-block"></span>
             </div>
 
             @if (!ViewData.ModelState.IsValid)
