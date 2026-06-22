@@ -1,36 +1,59 @@
-﻿@model Template.Web.Features.Login.LoginViewModel
+@model Template.Web.Features.Login.LoginViewModel
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Accedi a StudySync";
+    Layout = "_LayoutHtml"; // We use LayoutHtml to bypass the main Layout which includes the top nav
 }
-<div class="container">
-    <form method="post" role="form" autocomplete="off">
-        <input asp-for="ReturnUrl" type="hidden" />
 
-        <div class="form-group">
-            <label asp-for=Email class="onit-label-required"></label>
-            <div class="input-group onit-input-group-union">
-                <input asp-for="Email" class="form-control" type="text" />
+<div class="auth-wrapper d-flex align-items-center justify-content-center min-vh-100 bg-light">
+    <div class="auth-card p-4 p-sm-5 shadow-sm rounded-4 bg-white border-0">
+        <div class="text-center mb-4">
+            <div class="auth-logo-circle d-inline-flex align-items-center justify-content-center mb-3">
+                <i class="fa-solid fa-graduation-cap text-white fs-3"></i>
             </div>
-            <span asp-validation-for="Email" class="text-danger"></span>
+            <h2 class="auth-title fw-bold text-dark mb-1">StudySync</h2>
+            <p class="text-muted small">Accedi per iniziare a studiare in compagnia</p>
         </div>
 
-        <div class="form-group">
-            <label asp-for=Password class="onit-label-required"></label>
-            <div class="input-group onit-input-group-union">
-                <input asp-for="Password" class="form-control" type="password" />
+        <form method="post" role="form" autocomplete="off" class="needs-validation">
+            <input asp-for="ReturnUrl" type="hidden" />
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label small fw-semibold text-secondary">Indirizzo Email</label>
+                <div class="input-group">
+                    <span class="input-group-text border-end-0 bg-transparent text-muted"><i class="fa-regular fa-envelope"></i></span>
+                    <input asp-for="Email" class="form-control border-start-0 ps-0" placeholder="nome@esempio.it" required />
+                </div>
+                <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
             </div>
-            <span asp-validation-for="Password" class="text-danger"></span>
-        </div>
 
-        <div class="form-group">
-            <div class="form-check form-switch">
-                <input asp-for="RememberMe" class="form-check-input" role="switch">
-                <label asp-for="RememberMe" class="form-check-label">Rimani Connesso</label>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label small fw-semibold text-secondary">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text border-end-0 bg-transparent text-muted"><i class="fa-solid fa-lock"></i></span>
+                    <input asp-for="Password" class="form-control border-start-0 ps-0" placeholder="Inserisci la tua password" required />
+                </div>
+                <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
             </div>
-        </div>
 
-        <div class="form-group text-center mt-4">
-            <button type="submit" class="btn btn-primary">Accedi</button>
-        </div>
-    </form>
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="form-check form-switch">
+                    <input asp-for="RememberMe" class="form-check-input" role="switch">
+                    <label asp-for="RememberMe" class="form-check-label small text-secondary">Rimani Connesso</label>
+                </div>
+            </div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger small p-2 border-0 rounded-3 mb-4" role="alert">
+                    <div asp-validation-summary="All" class="mb-0"></div>
+                </div>
+            }
+
+            <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-semibold shadow-sm transition-all">Accedi</button>
+
+            <div class="text-center mt-4">
+                <p class="small text-secondary mb-0">Non hai ancora un account? <a href="@Url.Action(MVC.Login.Register())" class="text-primary fw-semibold text-decoration-none">Registrati</a></p>
+            </div>
+        </form>
+    </div>
 </div>
