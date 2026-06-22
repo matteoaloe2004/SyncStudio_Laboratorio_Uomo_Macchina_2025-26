@@ -1,0 +1,49 @@
+services:
+  mysql:
+    image: mysql:9.7
+    container_name: studysync-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password_super_segreta
+      MYSQL_DATABASE: studysync_db
+      MYSQL_USER: studysync_user
+      MYSQL_PASSWORD: studysync_password
+      TZ: 'UTC'
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - studysync_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword_super_segreta"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  app:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    container_name: studysync-app
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=studysync_db;Uid=root;Pwd=password_super_segreta;AllowUserVariables=True;"
+    ports:
+      - "5000:8080"
+      - "5001:8443"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - studysync_network
+
+volumes:
+  mysql_data:
+
+networks:
+  studysync_network:
+    driver: bridge

@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -32,13 +34,14 @@ namespace Template.Web
         {
             services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
 
-            // --- CORREZIONE: CONFIGURAZIONE MYSQL ---
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<TemplateDbContext>(options =>
-                options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-            // ----------------------------------------
+            {
+                options.UseMySql(connectionString, 
+                    new MySqlServerVersion(new System.Version(9, 7, 1)),
+                    mySqlOptions => mySqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null));
+            });
 
-            // ... il resto del metodo rimane identico ...
             services.AddSession();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
             {
