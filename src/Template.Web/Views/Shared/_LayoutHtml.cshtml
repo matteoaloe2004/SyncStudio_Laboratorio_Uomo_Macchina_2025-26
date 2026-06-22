@@ -20,10 +20,10 @@
     <script type="text/javascript">
         var clientLocale = '@this.CurrentCulture().Name';
     </script>
-    <environment include="Development">
+    <environment include="Development,Docker">
         <script src="~/js/bundle-global.js" asp-append-version="true"></script>
     </environment>
-    <environment include="Staging,Production">
+    <environment exclude="Development,Docker">
         <script src="~/js/bundle-global.min.js" asp-append-version="true"></script>
     </environment>
     @RenderSection("scripts", required: false)
