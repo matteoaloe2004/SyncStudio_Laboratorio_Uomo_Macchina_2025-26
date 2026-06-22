@@ -1,5 +1,6 @@
 ﻿using Template.Services.Shared;
 using Microsoft.Extensions.DependencyInjection;
+using Template.Services.Shared;
 using Template.Web.SignalR;
 
 namespace Template.Web
@@ -10,6 +11,7 @@ namespace Template.Web
         {
             // Registration of all the database services you have
             container.AddScoped<SharedService>();
+            container.AddScoped<AppuntoService>();
 
             // Registration of SignalR events
             container.AddScoped<IPublishDomainEvents, SignalrPublishDomainEvents>();
