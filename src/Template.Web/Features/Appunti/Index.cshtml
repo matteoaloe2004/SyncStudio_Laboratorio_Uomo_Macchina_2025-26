@@ -1,0 +1,499 @@
+@section styles {
+    <link rel="stylesheet" href="~/css/bundle-vue-multiselect.css" />
+    <style>
+        .filter-section {
+            background-color: #FFFFFF;
+            border: 1px solid #F1F5F9;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .note-card {
+            background-color: #FFFFFF;
+            border: 1px solid #F1F5F9;
+            border-radius: 16px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .note-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.05);
+        }
+        .tag-pill {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .tag-pill.active {
+            background-color: #2563EB !important;
+            color: #FFFFFF !important;
+        }
+        .rating-star {
+            cursor: pointer;
+            font-size: 1.25rem;
+            color: #D1D5DB;
+            transition: color 0.15s ease;
+        }
+        .rating-star.active {
+            color: #FBBF24;
+        }
+        .rating-star:hover {
+            color: #F59E0B;
+        }
+    </style>
+}
+
+<div id="app-appunti" class="container py-4" v-cloak>
+    <!-- Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="fw-bold tracking-tight text-dark mb-1">
+                <i class="fa-solid fa-book-open text-primary me-2"></i>Repository Appunti
+            </h1>
+            <p class="text-muted mb-0">Esplora, filtra e scarica il materiale didattico condiviso dagli studenti di StudySync.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <button class="btn btn-primary btn-lg rounded-pill shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                <i class="fa-solid fa-cloud-arrow-up me-2"></i>Condividi Appunti
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="filter-section shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-sliders text-secondary me-2"></i>Filtri</h5>
+                
+                <!-- Filter by Course -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-secondary small">Corsi</label>
+                    <select class="form-select rounded-3 border-light shadow-sm" v-model="selectedCorso">
+                        <option :value="null">Tutti i Corsi</option>
+                        <option v-for="c in corsi" :key="c.id" :value="c.id">{{ c.nome }}</option>
+                    </select>
+                </div>
+
+                <!-- Filter by Tag -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-secondary small">Tag Popolari</label>
+                    <div class="d-flex flex-wrap gap-1.5">
+                        <span v-for="t in allAvailableTags" 
+                              :key="t" 
+                              class="badge bg-light text-secondary rounded-pill py-2 px-3 tag-pill"
+                              :class="{ 'active': selectedTags.includes(t) }"
+                              @@click="toggleTag(t)">
+                            #{{ t }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Sort By -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-secondary small">Ordina Per</label>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" value="date" id="sortDate" v-model="sortBy">
+                            <label class="form-check-label text-dark small" for="sortDate">Data Caricamento</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" value="rating" id="sortRating" v-model="sortBy">
+                            <label class="form-check-label text-dark small" for="sortRating">Valutazione Media</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" value="downloads" id="sortDownloads" v-model="sortBy">
+                            <label class="form-check-label text-dark small" for="sortDownloads">Numero Download</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clear Filters -->
+                <button class="btn btn-outline-danger w-100 rounded-3 mt-2 btn-sm" @@click="resetFilters">
+                    <i class="fa-solid fa-rotate-left me-2"></i>Azzera Filtri
+                </button>
+            </div>
+        </div>
+
+        <!-- Notes Grid and Search -->
+        <div class="col-lg-9">
+            <!-- Search bar & Results Count -->
+            <div class="row align-items-center mb-4">
+                <div class="col-md-8 mb-3 mb-md-0">
+                    <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border border-light bg-white">
+                        <span class="input-group-text bg-white border-0 text-muted ps-4">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" class="form-control border-0 ps-2 fs-6 py-3" 
+                               placeholder="Cerca negli appunti per titolo o descrizione..." 
+                               v-model="searchQuery">
+                        <button v-if="searchQuery" class="btn btn-white border-0 text-muted pe-4" @@click="searchQuery = ''">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="text-muted small fw-semibold">Trovati {{ filteredAppunti.length }} appunti</span>
+                </div>
+            </div>
+
+            <!-- Notes Cards Grid -->
+            <div class="row">
+                <!-- Loading State -->
+                <div v-if="loading" class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Caricamento in corso...</span>
+                    </div>
+                    <p class="text-muted mt-3">Caricamento appunti...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div v-else-if="filteredAppunti.length === 0" class="col-12 text-center py-5">
+                    <div class="mb-3">
+                        <i class="fa-regular fa-folder-open text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">Nessun appunto trovato</h5>
+                    <p class="text-muted">Prova a modificare i filtri o la query di ricerca.</p>
+                </div>
+
+                <!-- Notes Cards -->
+                <div v-else v-for="a in filteredAppunti" :key="a.id" class="col-md-6 mb-4">
+                    <div class="card note-card h-100 p-3 shadow-sm d-flex flex-column justify-content-between">
+                        <div>
+                            <!-- Header Info -->
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-primary-light text-primary px-2.5 py-1.5 rounded-pill fs-9 fw-bold">
+                                    {{ a.corsoNome }}
+                                </span>
+                                <span class="text-muted fs-8"><i class="fa-regular fa-calendar me-1"></i>{{ a.dataCaricamento }}</span>
+                            </div>
+
+                            <!-- Title -->
+                            <h5 class="fw-bold text-dark mt-2 mb-2 line-clamp-1">{{ a.titolo }}</h5>
+                            
+                            <!-- Description -->
+                            <p class="text-secondary small mb-3 line-clamp-3">{{ a.descrizione }}</p>
+                        </div>
+
+                        <!-- Card Footer -->
+                        <div class="border-top pt-3 mt-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle bg-primary fs-8 text-white fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                                        {{ a.autoreNome.charAt(0).toUpperCase() }}
+                                    </div>
+                                    <span class="text-dark fw-semibold small">{{ a.autoreNome }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="text-warning small fw-bold">
+                                        <i class="fa-solid fa-star me-1"></i>{{ a.rating }}
+                                    </span>
+                                    <span class="text-secondary small">
+                                        <i class="fa-solid fa-download me-1"></i>{{ a.downloads }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Action button -->
+                            <button class="btn btn-outline-primary btn-sm rounded-pill w-100 mt-3" @@click="openDetails(a)">
+                                <i class="fa-solid fa-eye me-1.5"></i>Visualizza Dettagli
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appunto Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg" v-if="activeAppunto">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <span class="badge bg-primary-light text-primary px-3 py-1.5 rounded-pill fs-8 fw-bold">
+                        {{ activeAppunto.corsoNome }}
+                    </span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <h4 class="fw-bold text-dark mb-2">{{ activeAppunto.titolo }}</h4>
+                    <div class="d-flex align-items-center gap-3 text-muted small mb-3">
+                        <span><i class="fa-solid fa-user me-1"></i>{{ activeAppunto.autoreNome }}</span>
+                        <span><i class="fa-regular fa-calendar me-1"></i>{{ activeAppunto.dataCaricamento }}</span>
+                    </div>
+
+                    <p class="text-secondary small mb-4">{{ activeAppunto.descrizione }}</p>
+
+                    <!-- Stats in Modal -->
+                    <div class="row text-center bg-light rounded-3 py-2.5 mb-4 mx-0">
+                        <div class="col-6 border-end">
+                            <span class="d-block text-secondary small">Downloads</span>
+                            <span class="fw-bold text-dark"><i class="fa-solid fa-download me-1"></i>{{ activeAppunto.downloads }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="d-block text-secondary small">Valutazione</span>
+                            <span class="fw-bold text-warning"><i class="fa-solid fa-star me-1"></i>{{ activeAppunto.rating }} / 5.0</span>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Rating System -->
+                    <div class="text-center mb-4">
+                        <p class="small fw-semibold text-secondary mb-2">Lascia la tua valutazione</p>
+                        <div class="d-flex justify-content-center gap-1.5">
+                            <i v-for="star in 5" 
+                               :key="star" 
+                               class="fa-solid fa-star rating-star" 
+                               :class="{ 'active': star <= (userRating || activeAppunto.userVote) }"
+                               @@click="submitRating(star)">
+                            </i>
+                        </div>
+                        <p v-if="hasVoted[activeAppunto.id]" class="text-success small mt-2 fw-semibold">Valutazione registrata con successo!</p>
+                    </div>
+
+                    <!-- Download action -->
+                    <a :href="'/Appunti/Download/' + activeAppunto.id" 
+                       class="btn btn-primary w-100 btn-lg rounded-pill shadow-sm"
+                       @@click="incrementDownloads(activeAppunto)">
+                        <i class="fa-solid fa-download me-2"></i>Scarica Appunto (PDF)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share/Upload Notes Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark" id="uploadModalLabel">Condividi Appunti</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form @@submit.prevent="submitUpload">
+                    <div class="modal-body pt-3">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Titolo Appunto</label>
+                            <input type="text" class="form-control rounded-3" placeholder="Es: Formulario Integrali Doppi" required v-model="uploadForm.titolo">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Corso</label>
+                            <select class="form-select rounded-3" required v-model="uploadForm.corsoId">
+                                <option value="" disabled selected>Seleziona un corso...</option>
+                                <option v-for="c in corsi" :key="c.id" :value="c.id">{{ c.nome }}</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Descrizione</label>
+                            <textarea class="form-control rounded-3" rows="3" placeholder="Descrivi il contenuto degli appunti..." required v-model="uploadForm.descrizione"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary">Seleziona File (PDF)</label>
+                            <input type="file" class="form-control rounded-3" accept=".pdf" required @@change="handleFileChange">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-up me-2"></i>Carica e Condividi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/js/bundle-vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app-appunti',
+            data: {
+                appunti: [],
+                corsi: [],
+                loading: true,
+                searchQuery: '',
+                selectedCorso: null,
+                selectedTags: [],
+                sortBy: 'date',
+                activeAppunto: null,
+                userRating: 0,
+                hasVoted: {},
+                uploadForm: {
+                    titolo: '',
+                    descrizione: '',
+                    corsoId: '',
+                    nomeFile: ''
+                },
+                allAvailableTags: ['Analisi', 'Integrali', 'Limiti', 'Algebra', 'Vettori', 'Fisica', 'Dinamica', 'Teoremi', 'Esercizi']
+            },
+            computed: {
+                filteredAppunti() {
+                    let result = this.appunti;
+
+                    // 1. Text Search Filter
+                    if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
+                        result = result.filter(a => 
+                            a.titolo.toLowerCase().includes(query) || 
+                            a.descrizione.toLowerCase().includes(query)
+                        );
+                    }
+
+                    // 2. Course Filter
+                    if (this.selectedCorso) {
+                        result = result.filter(a => a.corsoId === this.selectedCorso);
+                    }
+
+                    // 3. Tag Filter (All selected tags must match)
+                    if (this.selectedTags.length > 0) {
+                        result = result.filter(a => 
+                            this.selectedTags.every(t => 
+                                a.tags.some(at => at.toLowerCase().includes(t.toLowerCase()))
+                            )
+                        );
+                    }
+
+                    // 4. Sorting
+                    return result.slice().sort((a, b) => {
+                        if (this.sortBy === 'date') {
+                            // parse date dd/MM/yyyy
+                            const dateA = this.parseDate(a.dataCaricamento);
+                            const dateB = this.parseDate(b.dataCaricamento);
+                            return dateB - dateA; // newest first
+                        } else if (this.sortBy === 'rating') {
+                            return b.rating - a.rating; // highest rating first
+                        } else if (this.sortBy === 'downloads') {
+                            return b.downloads - a.downloads; // highest downloads first
+                        }
+                        return 0;
+                    });
+                }
+            },
+            created() {
+                this.loadData();
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const tagParam = urlParams.get('tag');
+                if (tagParam) {
+                    this.selectedTags.push(tagParam);
+                }
+                const qParam = urlParams.get('q');
+                if (qParam) {
+                    this.searchQuery = qParam;
+                }
+            },
+            methods: {
+                loadData() {
+                    this.loading = true;
+                    fetch('/Appunti/GetAppunti')
+                        .then(res => res.json())
+                        .then(data => {
+                            this.appunti = data.appunti;
+                            this.corsi = data.corsi;
+                            this.loading = false;
+                        })
+                        .catch(err => {
+                            console.error('Error loading appunti:', err);
+                            this.loading = false;
+                            Toastify({
+                                text: "Errore durante il caricamento degli appunti",
+                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                duration: 3000
+                            }).showToast();
+                        });
+                },
+                toggleTag(t) {
+                    const idx = this.selectedTags.indexOf(t);
+                    if (idx > -1) {
+                        this.selectedTags.splice(idx, 1);
+                    } else {
+                        this.selectedTags.push(t);
+                    }
+                },
+                resetFilters() {
+                    this.selectedCorso = null;
+                    this.selectedTags = [];
+                    this.sortBy = 'date';
+                    this.searchQuery = '';
+                },
+                parseDate(str) {
+                    const parts = str.split('/');
+                    return new Date(parts[2], parts[1] - 1, parts[0]);
+                },
+                openDetails(a) {
+                    this.activeAppunto = a;
+                    this.userRating = 0;
+                    const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+                    modal.show();
+                },
+                submitRating(stars) {
+                    if (this.hasVoted[this.activeAppunto.id]) return;
+                    
+                    this.userRating = stars;
+                    this.$set(this.activeAppunto, 'userVote', stars);
+                    this.$set(this.hasVoted, this.activeAppunto.id, true);
+
+                    // Re-calculate mock rating
+                    const newRating = (this.activeAppunto.rating * 10 + stars) / 11;
+                    this.activeAppunto.rating = Math.round(newRating * 10) / 10;
+
+                    Toastify({
+                        text: "Grazie per il tuo feedback!",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                        duration: 3000
+                    }).showToast();
+                },
+                incrementDownloads(a) {
+                    a.downloads++;
+                    // bootstrap modal close
+                    setTimeout(() => {
+                        const modalEl = document.getElementById('detailsModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }, 500);
+                },
+                handleFileChange(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        this.uploadForm.nomeFile = file.name;
+                    }
+                },
+                submitUpload() {
+                    const selectedCourseObj = this.corsi.find(c => c.id === this.uploadForm.corsoId);
+                    
+                    const newAppunto = {
+                        id: 'mock-' + Math.random().toString(36).substr(2, 9),
+                        titolo: this.uploadForm.titolo,
+                        descrizione: this.uploadForm.descrizione,
+                        nomeFile: this.uploadForm.nomeFile || 'appunti_caricati.pdf',
+                        dataCaricamento: new Date().toLocaleDateString('it-IT'),
+                        corsoNome: selectedCourseObj ? selectedCourseObj.nome : 'Corso Generico',
+                        corsoId: this.uploadForm.corsoId,
+                        autoreNome: 'Tu (SuperPippo)',
+                        downloads: 0,
+                        rating: 5.0,
+                        tags: [selectedCourseObj ? selectedCourseObj.nome : 'Corso', 'Nuovo']
+                    };
+
+                    this.appunti.unshift(newAppunto);
+
+                    // Reset form
+                    this.uploadForm.titolo = '';
+                    this.uploadForm.descrizione = '';
+                    this.uploadForm.corsoId = '';
+                    this.uploadForm.nomeFile = '';
+
+                    // Close modal
+                    const modalEl = document.getElementById('uploadModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+
+                    Toastify({
+                        text: "Appunti caricati con successo!",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                        duration: 3000
+                    }).showToast();
+                }
+            }
+        });
+    </script>
+}

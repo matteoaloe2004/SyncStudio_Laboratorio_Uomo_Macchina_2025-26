@@ -212,17 +212,17 @@
                 <h4 class="fw-bold text-dark mb-2">Accesso Rapido Appunti</h4>
                 <p class="text-muted small mb-3">Trova velocemente il materiale condiviso dagli altri studenti.</p>
                 
-                <div class="input-group input-group-sm rounded-3 overflow-hidden shadow-sm border mb-3">
+                <form action="/Appunti" method="get" class="input-group input-group-sm rounded-3 overflow-hidden shadow-sm border mb-3">
                     <span class="input-group-text border-0 bg-transparent text-muted"><i class="fa-solid fa-magnifying-glass fs-7"></i></span>
-                    <input type="text" class="form-control border-0 px-1" placeholder="Cerca per limiti, forze, matrici..." />
-                </div>
+                    <input type="text" name="q" class="form-control border-0 px-1" placeholder="Cerca per limiti, forze, matrici..." />
+                </form>
 
                 <div class="d-flex flex-wrap gap-1.5 mb-2">
-                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Limiti</a>
-                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Derivate</a>
-                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Integrali</a>
-                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Matrici</a>
-                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Forze</a>
+                    <a href="/Appunti?tag=Limiti" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Limiti</a>
+                    <a href="/Appunti?tag=Derivate" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Derivate</a>
+                    <a href="/Appunti?tag=Integrali" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Integrali</a>
+                    <a href="/Appunti?tag=Matrici" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Matrici</a>
+                    <a href="/Appunti?tag=Forze" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Forze</a>
                 </div>
             </div>
 
