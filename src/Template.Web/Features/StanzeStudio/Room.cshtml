@@ -164,12 +164,12 @@
                 <h5 class="fw-bold text-dark mb-3"><i class="fa-solid fa-list-check text-primary me-2"></i>Task List di Gruppo</h5>
                 
                 <!-- Add Task Form -->
-                <form @@submit.prevent="addTask" class="input-group mb-3 shadow-sm rounded-3 overflow-hidden">
+                <!form @@submit.prevent="addTask" class="input-group mb-3 shadow-sm rounded-3 overflow-hidden">
                     <input type="text" v-model="newTaskText" class="form-control border-0 bg-light px-3 py-2.5" placeholder="Aggiungi una task per il gruppo..." required />
                     <button class="btn btn-primary px-4 border-0" type="submit">
                         <i class="fa-solid fa-plus"></i>
                     </button>
-                </form>
+                </!form>
 
                 <!-- Tasks List -->
                 <div v-if="tasks.length === 0" class="text-center py-4 text-muted">
@@ -229,12 +229,12 @@
                         </div>
 
                         <!-- Chat Input Form -->
-                        <form @@submit.prevent="sendChatMessage" class="input-group">
+                        <!form @@submit.prevent="sendChatMessage" class="input-group">
                             <input type="text" v-model="newChatMessageText" class="form-control rounded-start-3 px-3 py-2.5 border border-end-0" placeholder="Scrivi un messaggio..." required />
                             <button class="btn btn-primary rounded-end-3 px-4 border" type="submit">
                                 <i class="fa-regular fa-paper-plane"></i>
                             </button>
-                        </form>
+                        </!form>
                     </div>
                 </div>
             </div>
