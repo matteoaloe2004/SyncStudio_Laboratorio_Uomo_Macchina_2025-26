@@ -1,1 +1,193 @@
-﻿@import "site.variables.scss";
+@import "site.variables.scss";
+
+// Global Adjustments
+body {
+    background-color: #F8FAFC;
+    color: #1E293B;
+    font-family: 'Inter', sans-serif;
+}
+
+.bg-light-gray {
+    background-color: #F8FAFC;
+}
+
+// Typography & Spacing
+.tracking-wider {
+    letter-spacing: 0.05em;
+}
+.fs-7 {
+    font-size: 0.85rem !important;
+}
+.fs-8 {
+    font-size: 0.75rem !important;
+}
+.fs-9 {
+    font-size: 0.65rem !important;
+}
+
+// Navbar Styling overrides
+.navbar {
+    border-color: #E2E8F0 !important;
+    .font-brand {
+        font-weight: 800;
+        font-size: 1.25rem;
+        background: linear-gradient(135deg, #2563EB, #4F46E5);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .nav-link {
+        transition: all 0.2s ease;
+        &:hover {
+            color: #2563EB !important;
+            background-color: #EFF6FF;
+        }
+        &.active-pill {
+            background-color: #2563EB !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        }
+    }
+}
+
+// Dashboard Stat Cards
+.dashboard-stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #F1F5F9 !important;
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+    }
+    i {
+        font-size: 1.1rem;
+    }
+}
+
+// Study Room Cards
+.study-room-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #F1F5F9 !important;
+    &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.07) !important;
+    }
+}
+
+// Badges
+.bg-primary-light {
+    background-color: #EFF6FF !important;
+    color: #2563EB !important;
+}
+.bg-warning-light {
+    background-color: #FFFBEB !important;
+    color: #D97706 !important;
+}
+
+// Avatars
+.avatar-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: white;
+    font-weight: 700;
+}
+
+// Custom CSS Graph
+.weekly-chart {
+    border-bottom: 2px solid #E2E8F0;
+    margin-bottom: 0.5rem;
+    .chart-bar {
+        transition: height 0.3s ease, background-color 0.2s ease;
+        cursor: pointer;
+        &:hover {
+            background-color: #4F46E5 !important;
+            .chart-bar-value {
+                opacity: 1;
+                transform: translate(-50%, -4px);
+            }
+        }
+    }
+    .chart-bar-value {
+        font-size: 0.7rem;
+        background-color: #1E293B;
+        color: #FFFFFF;
+        padding: 2px 6px;
+        border-radius: 4px;
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+}
+
+// Gradient Cards
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #2563EB, #4F46E5);
+    color: #FFFFFF;
+}
+.bg-white-transparent {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: #FFFFFF !important;
+    backdrop-filter: blur(4px);
+}
+.text-white-80 {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.btn-white {
+    background-color: #FFFFFF !important;
+    color: #2563EB !important;
+    border: 1px solid #FFFFFF !important;
+    &:hover {
+        background-color: #F8FAFC !important;
+        color: #1D4ED8 !important;
+    }
+}
+
+// Auth Forms layout
+.auth-wrapper {
+    background: radial-gradient(circle at top right, #EEF2FF, #F8FAFC);
+}
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    border: 1px solid #E2E8F0 !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05) !important;
+}
+.auth-logo-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563EB, #3B82F6);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    &.bg-success {
+        background: linear-gradient(135deg, #10B981, #34D399) !important;
+        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3) !important;
+    }
+}
+
+.form-control:focus {
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
+}
+
+.input-group-text {
+    border-color: #CED4DA;
+}
+
+.transition-all {
+    transition: all 0.2s ease-in-out !important;
+}
+
+.hover-bg-light:hover {
+    background-color: #F1F5F9 !important;
+}
+
+// Badges inside quick access
+.hover-primary {
+    transition: all 0.2s ease;
+    &:hover {
+        background-color: #2563EB !important;
+        color: #FFFFFF !important;
+        border-color: #2563EB !important;
+    }
+}

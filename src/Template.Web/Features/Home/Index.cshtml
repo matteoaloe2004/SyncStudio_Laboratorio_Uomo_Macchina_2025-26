@@ -1,0 +1,240 @@
+@model Template.Web.Features.Home.HomeViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    
+    // Day translation
+    var culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+    var rawDayOfWeek = DateTime.Now.ToString("dddd, d MMMM yyyy", culture).ToUpper();
+}
+
+<div class="container-fluid py-4 px-md-5 bg-light-gray min-vh-100">
+    <!-- Top Row: Welcome & Stats -->
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-md-7">
+            <span class="text-uppercase text-muted fw-bold tracking-wider fs-7">@rawDayOfWeek</span>
+            <h1 class="fw-bold text-dark mb-1">Bentornato, @Model.NickName! 👋</h1>
+            <p class="text-secondary mb-0">Pronto per la sessione di studio di oggi?</p>
+        </div>
+        <div class="col-md-5">
+            <div class="d-flex gap-3 justify-content-md-end flex-wrap">
+                <!-- Stat Card 1 -->
+                <div class="dashboard-stat-card shadow-sm bg-white rounded-3 p-3 text-center border-0 flex-fill">
+                    <span class="d-block text-muted small fw-semibold text-uppercase mb-1"><i class="fa-regular fa-clock text-primary"></i> 21.5h</span>
+                    <span class="fs-8 text-secondary">Ore questa settimana</span>
+                </div>
+                <!-- Stat Card 2 -->
+                <div class="dashboard-stat-card shadow-sm bg-white rounded-3 p-3 text-center border-0 flex-fill">
+                    <span class="d-block text-warning small fw-bold text-uppercase mb-1"><i class="fa-solid fa-fire"></i> 5 gg</span>
+                    <span class="fs-8 text-secondary">Giorni di fila</span>
+                </div>
+                <!-- Stat Card 3 -->
+                <div class="dashboard-stat-card shadow-sm bg-white rounded-3 p-3 text-center border-0 flex-fill">
+                    <span class="d-block text-success small fw-semibold text-uppercase mb-1"><i class="fa-solid fa-chart-line"></i> 3.5h</span>
+                    <span class="fs-8 text-secondary">Oggi di studio</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="row g-4">
+        <!-- Left Column: Rooms & Analytics -->
+        <div class="col-lg-8">
+            <!-- Header section of Rooms -->
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <div>
+                    <h3 class="fw-bold text-dark mb-0">
+                        <span class="status-indicator bg-success d-inline-block rounded-circle me-2" style="width: 8px; height: 8px;"></span>
+                        Stanze Studio Live
+                    </h3>
+                    <span class="text-secondary small">@Model.Stanze.Count stanze attive ora • 27 studenti online</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <div class="input-group input-group-sm rounded-3 overflow-hidden shadow-sm" style="max-width: 200px;">
+                        <span class="input-group-text border-0 bg-white text-muted"><i class="fa-solid fa-magnifying-glass fs-7"></i></span>
+                        <input type="text" class="form-control border-0 px-1" placeholder="Cerca stanza..." />
+                    </div>
+                    <button class="btn btn-sm btn-white border shadow-sm rounded-3 fw-semibold text-dark"><i class="fa-solid fa-plus me-1"></i> Crea stanza</button>
+                </div>
+            </div>
+
+            <!-- Rooms Grid -->
+            <div class="row g-3 mb-4">
+                @foreach (var stanza in Model.Stanze)
+                {
+                    var isFocus = stanza.IsInEsecuzione;
+                    var progressPercentage = isFocus ? (100 - (stanza.TempoRimanente.TotalMinutes / 25.0 * 100.0)) : 0;
+                    if (progressPercentage < 0) progressPercentage = 0;
+                    if (progressPercentage > 100) progressPercentage = 100;
+
+                    <div class="col-md-6">
+                        <div class="card study-room-card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white p-4">
+                            <!-- Card Header -->
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h5 class="fw-bold text-dark mb-0">@stanza.CorsoNome</h5>
+                                    <span class="text-muted small">@stanza.Nome</span>
+                                </div>
+                                <span class="badge rounded-pill px-2.5 py-1 fs-8 fw-semibold @(isFocus ? "bg-primary-light text-primary" : "bg-warning-light text-warning")">
+                                    @(isFocus ? "In Focus" : "In pausa")
+                                </span>
+                            </div>
+
+                            <!-- Timer & State -->
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fa-regular fa-clock me-2 text-secondary fs-5"></i>
+                                <span class="fw-semibold text-dark fs-5">@string.Format("{0:00}:{1:00}", stanza.TempoRimanente.Minutes, stanza.TempoRimanente.Seconds)</span>
+                                <span class="text-muted small ms-2">rimanenti</span>
+                            </div>
+
+                            <!-- Presence & Progress Bar -->
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="avatar-group d-flex align-items-center">
+                                    @for (int i = 0; i < Math.Min(stanza.OnlineCount, 3); i++)
+                                    {
+                                        var colors = new[] { "bg-primary", "bg-success", "bg-warning", "bg-danger", "bg-info" };
+                                        var letters = new[] { "GF", "MR", "AC", "LM", "SE" };
+                                        <div class="avatar-circle rounded-circle border border-white text-white d-flex align-items-center justify-content-center fw-bold fs-9 @colors[(stanza.Nome.Length + i) % colors.Length]" style="width: 24px; height: 24px; margin-left: @(i > 0 ? "-8px" : "0px");">
+                                            @letters[(stanza.Nome.Length + i) % letters.Length]
+                                        </div>
+                                    }
+                                    <span class="text-muted small ms-2">@stanza.OnlineCount/@stanza.MaxCapacity online</span>
+                                </div>
+                                <div class="progress flex-grow-1 ms-3" style="height: 6px; border-radius: 3px;">
+                                    <div class="progress-bar @(isFocus ? "bg-primary" : "bg-warning")" role="progressbar" style="width: @progressPercentage.ToString("0")%" aria-valuenow="@progressPercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+
+                            <!-- Join Button -->
+                            <a href="#" class="btn btn-primary w-100 py-2.5 rounded-3 fw-semibold shadow-sm mt-auto d-flex align-items-center justify-content-center transition-all">
+                                Unisciti alla stanza <i class="fa-solid fa-arrow-right ms-2 fs-7"></i>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Weekly Activity Section -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-0">Attività settimanale</h4>
+                        <span class="text-secondary small">Ore di studio per giorno</span>
+                    </div>
+                    <span class="text-muted small fw-semibold">Questa settimana</span>
+                </div>
+                <div class="weekly-chart d-flex align-items-end justify-content-between pt-4 px-2" style="height: 150px;">
+                    <!-- L -->
+                    <div class="chart-column text-center flex-fill">
+                        <div class="chart-bar bg-primary-light rounded-top-2 mx-auto position-relative" style="height: 60px; width: 32px;" title="2.5h">
+                            <span class="chart-bar-value fs-9 text-dark fw-semibold position-absolute top-0 start-50 translate-middle-x mt-n4">2.5h</span>
+                        </div>
+                        <span class="chart-label d-block mt-2 text-secondary small">L</span>
+                    </div>
+                    <!-- M -->
+                    <div class="chart-column text-center flex-fill">
+                        <div class="chart-bar bg-primary-light rounded-top-2 mx-auto position-relative" style="height: 80px; width: 32px;" title="3h">
+                            <span class="chart-bar-value fs-9 text-dark fw-semibold position-absolute top-0 start-50 translate-middle-x mt-n4">3h</span>
+                        </div>
+                        <span class="chart-label d-block mt-2 text-secondary small">M</span>
+                    </div>
+                    <!-- M -->
+                    <div class="chart-column text-center flex-fill">
+                        <div class="chart-bar bg-primary-light rounded-top-2 mx-auto position-relative" style="height: 40px; width: 32px;" title="1.5h">
+                            <span class="chart-bar-value fs-9 text-dark fw-semibold position-absolute top-0 start-50 translate-middle-x mt-n4">1.5h</span>
+                        </div>
+                        <span class="chart-label d-block mt-2 text-secondary small">M</span>
+                    </div>
+                    <!-- G -->
+                    <div class="chart-column text-center flex-fill">
+                        <div class="chart-bar bg-primary-light rounded-top-2 mx-auto position-relative" style="height: 100px; width: 32px;" title="4h">
+                            <span class="chart-bar-value fs-9 text-dark fw-semibold position-absolute top-0 start-50 translate-middle-x mt-n4">4h</span>
+                        </div>
+                        <span class="chart-label d-block mt-2 text-secondary small">G</span>
+                    </div>
+                    <!-- V -->
+                    <div class="chart-column text-center flex-fill">
+                        <div class="chart-bar bg-primary-light rounded-top-2 mx-auto position-relative" style="height: 50px; width: 32px;" title="2h">
+                            <span class="chart-bar-value fs-9 text-dark fw-semibold position-absolute top-0 start-50 translate-middle-x mt-n4">2h</span>
+                        </div>
+                        <span class="chart-label d-block mt-2 text-secondary small">V</span>
+                    </div>
+                    <!-- S -->
+                    <div class="chart-column text-center flex-fill">
+                        <div class="chart-bar bg-primary rounded-top-2 mx-auto position-relative" style="height: 120px; width: 32px;" title="5h">
+                            <span class="chart-bar-value fs-9 text-dark fw-bold position-absolute top-0 start-50 translate-middle-x mt-n4">5h</span>
+                        </div>
+                        <span class="chart-label d-block mt-2 text-secondary small fw-bold">S</span>
+                    </div>
+                    <!-- D -->
+                    <div class="chart-column text-center flex-fill">
+                        <div class="chart-bar bg-primary-light rounded-top-2 mx-auto position-relative" style="height: 90px; width: 32px;" title="3.5h">
+                            <span class="chart-bar-value fs-9 text-dark fw-semibold position-absolute top-0 start-50 translate-middle-x mt-n4">3.5h</span>
+                        </div>
+                        <span class="chart-label d-block mt-2 text-secondary small">D</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Sidebar -->
+        <div class="col-lg-4">
+            <!-- Courses Card -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h4 class="fw-bold text-dark mb-0">I tuoi Corsi</h4>
+                    <a href="#" class="text-primary fs-8 fw-semibold text-decoration-none">Gestisci</a>
+                </div>
+                <div class="list-group list-group-flush gap-2 mb-3">
+                    @foreach (var corso in Model.Corsi)
+                    {
+                        var colors = new[] { "bg-primary", "bg-success", "bg-warning", "bg-danger", "bg-info" };
+                        var colorClass = colors[corso.Nome.Length % colors.Length];
+                        <a href="#" class="list-group-item list-group-item-action border-0 d-flex align-items-center justify-content-between p-2.5 rounded-3 transition-all hover-bg-light">
+                            <div class="d-flex align-items-center">
+                                <div class="course-avatar rounded-circle text-white d-flex align-items-center justify-content-center fw-bold fs-7 @colorClass" style="width: 36px; height: 36px;">
+                                    @corso.Nome.Substring(0, 1)
+                                </div>
+                                <div class="ms-3">
+                                    <h6 class="fw-bold text-dark mb-0">@corso.Nome</h6>
+                                    <span class="text-secondary small">@corso.AppuntiCount appunti</span>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-muted fs-8"></i>
+                        </a>
+                    }
+                </div>
+                <button class="btn btn-outline-primary w-100 py-2 rounded-3 fw-semibold fs-7"><i class="fa-solid fa-plus me-1"></i> Aggiungi corso</button>
+            </div>
+
+            <!-- Quick Access Notes -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+                <h4 class="fw-bold text-dark mb-2">Accesso Rapido Appunti</h4>
+                <p class="text-muted small mb-3">Trova velocemente il materiale condiviso dagli altri studenti.</p>
+                
+                <div class="input-group input-group-sm rounded-3 overflow-hidden shadow-sm border mb-3">
+                    <span class="input-group-text border-0 bg-transparent text-muted"><i class="fa-solid fa-magnifying-glass fs-7"></i></span>
+                    <input type="text" class="form-control border-0 px-1" placeholder="Cerca per limiti, forze, matrici..." />
+                </div>
+
+                <div class="d-flex flex-wrap gap-1.5 mb-2">
+                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Limiti</a>
+                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Derivate</a>
+                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Integrali</a>
+                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Matrici</a>
+                    <a href="#" class="badge bg-light text-secondary text-decoration-none border rounded-pill py-1.5 px-3 fs-8 hover-primary">Forze</a>
+                </div>
+            </div>
+
+            <!-- Recommended Box -->
+            <div class="card border-0 shadow-sm rounded-4 bg-gradient-primary text-white p-4">
+                <span class="d-inline-block badge bg-white-transparent rounded-pill px-2.5 py-1 fs-9 fw-semibold text-uppercase mb-2"><i class="fa-solid fa-user-graduate me-1"></i> Consigliato per te</span>
+                <h5 class="fw-bold mb-1">Analisi 1 - Limiti</h5>
+                <p class="small text-white-80 mb-3">5 studenti stanno studiando ora nella stanza associata. Mancano 18:42!</p>
+                <a href="#" class="btn btn-white w-100 py-2.5 rounded-3 fw-semibold text-primary shadow-sm hover-scale d-flex align-items-center justify-content-center">
+                    Entra subito <i class="fa-solid fa-arrow-right ms-2 fs-7"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
