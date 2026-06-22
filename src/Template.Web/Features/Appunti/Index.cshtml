@@ -384,6 +384,10 @@
                 if (qParam) {
                     this.searchQuery = qParam;
                 }
+                const corsoIdParam = urlParams.get('corsoId');
+                if (corsoIdParam) {
+                    this.selectedCorso = corsoIdParam;
+                }
             },
             methods: {
                 loadData() {
