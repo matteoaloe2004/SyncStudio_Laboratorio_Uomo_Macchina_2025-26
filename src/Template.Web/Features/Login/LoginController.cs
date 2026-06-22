@@ -46,7 +46,7 @@ namespace Template.Web.Features.Login
             if (string.IsNullOrWhiteSpace(returnUrl) == false)
                 return Redirect(returnUrl);
 
-            return RedirectToAction(MVC.Example.Users.Index());
+            return RedirectToAction(MVC.Home.Index());
         }
 
         [HttpGet]
@@ -57,7 +57,7 @@ namespace Template.Web.Features.Login
                 if (string.IsNullOrWhiteSpace(returnUrl) == false)
                     return Redirect(returnUrl);
 
-                return RedirectToAction(MVC.Example.Users.Index());
+                return RedirectToAction(MVC.Home.Index());
             }
 
             var model = new LoginViewModel
@@ -90,6 +90,54 @@ namespace Template.Web.Features.Login
             }
 
             return RedirectToAction(MVC.Login.Login());
+        }
+
+        [HttpGet]
+        public virtual IActionResult Register()
+        {
+            if (HttpContext.User != null && HttpContext.User.Identity != null && HttpContext.User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction(MVC.Home.Index());
+            }
+
+            return View(new RegisterViewModel());
+        }
+
+        [HttpPost]
+        public async virtual Task<ActionResult> Register(RegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var userId = await _sharedService.Handle(new RegisterUserCommand
+                    {
+                        Email = model.Email,
+                        Password = model.Password,
+                        FirstName = model.FirstName,
+                        LastName = model.LastName,
+                        NickName = model.NickName
+                    });
+
+                    var utente = new UserDetailDTO
+                    {
+                        Id = userId,
+                        Email = model.Email,
+                        FirstName = model.FirstName,
+                        LastName = model.LastName,
+                        NickName = model.NickName
+                    };
+
+                    Alerts.AddSuccess(this, "Registrazione avvenuta con successo!");
+                    return LoginAndRedirect(utente, null, false);
+                }
+                catch (Exception e)
+                {
+                    ModelState.AddModelError(string.Empty, e.Message);
+                }
+            }
+
+            return View(model);
         }
 
         [HttpPost]
