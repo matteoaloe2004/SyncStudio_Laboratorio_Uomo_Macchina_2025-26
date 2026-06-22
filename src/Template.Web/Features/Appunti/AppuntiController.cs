@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -13,10 +14,12 @@ namespace Template.Web.Features.Appunti
     public partial class AppuntiController : AuthenticatedBaseController
     {
         private readonly TemplateDbContext _dbContext;
+        private readonly AppuntoService _appuntoService;
 
-        public AppuntiController(TemplateDbContext dbContext)
+        public AppuntiController(TemplateDbContext dbContext, AppuntoService appuntoService)
         {
             _dbContext = dbContext;
+            _appuntoService = appuntoService;
         }
 
         [HttpGet]
@@ -68,6 +71,73 @@ namespace Template.Web.Features.Appunti
             }).ToList();
 
             return Json(new { appunti = data, corsi = corsiList });
+        }
+
+        [HttpPost]
+        public async virtual Task<IActionResult> Upload(string titolo, string descrizione, Guid corsoId, IFormFile file)
+        {
+            if (string.IsNullOrWhiteSpace(titolo) || corsoId == Guid.Empty || file == null)
+            {
+                return Json(new { success = false, message = "Dati incompleti o file mancante." });
+            }
+
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Challenge();
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
+            var cmd = new AddAppuntoCommand
+            {
+                Titolo = titolo,
+                Descrizione = descrizione,
+                NomeFile = file.FileName,
+                CorsoId = corsoId,
+                UserId = userId
+            };
+
+            try
+            {
+                var id = await _appuntoService.Handle(cmd);
+
+                var a = await _dbContext.Appunti
+                    .Include(x => x.Corso)
+                    .Include(x => x.User)
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                if (a == null)
+                {
+                    return Json(new { success = false, message = "Errore durante il salvataggio dell'appunto." });
+                }
+
+                var hash = Math.Abs(a.Id.GetHashCode());
+                var rating = 5.0; // Nuovi caricamenti partono con 5.0
+                var downloads = 0;
+                var tags = new[] { a.Corso.Nome, a.Titolo.Split(' ').FirstOrDefault() };
+
+                var result = new
+                {
+                    Id = a.Id,
+                    Titolo = a.Titolo,
+                    Descrizione = a.Descrizione,
+                    NomeFile = a.NomeFile,
+                    DataCaricamento = a.DataCaricamento.ToString("dd/MM/yyyy"),
+                    CorsoNome = a.Corso.Nome,
+                    CorsoId = a.CorsoId,
+                    AutoreNome = a.User.NickName ?? a.User.FirstName ?? "Studente",
+                    Downloads = downloads,
+                    Rating = Math.Round(rating, 1),
+                    Tags = tags
+                };
+
+                return Json(new { success = true, appunto = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Errore del server: " + ex.Message });
+            }
         }
 
         [HttpGet]

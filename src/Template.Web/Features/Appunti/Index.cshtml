@@ -266,7 +266,7 @@
                     <h5 class="modal-title fw-bold text-dark" id="uploadModalLabel">Condividi Appunti</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form @@submit.prevent="submitUpload">
+                <!form @@submit.prevent="submitUpload">
                     <div class="modal-body pt-3">
                         <div class="mb-3">
                             <label class="form-label small fw-semibold text-secondary">Titolo Appunto</label>
@@ -295,7 +295,7 @@
                             <i class="fa-solid fa-cloud-arrow-up me-2"></i>Carica e Condividi
                         </button>
                     </div>
-                </form>
+                </!form>
             </div>
         </div>
     </div>
@@ -321,7 +321,8 @@
                     titolo: '',
                     descrizione: '',
                     corsoId: '',
-                    nomeFile: ''
+                    nomeFile: '',
+                    file: null
                 },
                 allAvailableTags: ['Analisi', 'Integrali', 'Limiti', 'Algebra', 'Vettori', 'Fisica', 'Dinamica', 'Teoremi', 'Esercizi']
             },
@@ -455,43 +456,71 @@
                     const file = e.target.files[0];
                     if (file) {
                         this.uploadForm.nomeFile = file.name;
+                        this.uploadForm.file = file;
                     }
                 },
                 submitUpload() {
-                    const selectedCourseObj = this.corsi.find(c => c.id === this.uploadForm.corsoId);
-                    
-                    const newAppunto = {
-                        id: 'mock-' + Math.random().toString(36).substr(2, 9),
-                        titolo: this.uploadForm.titolo,
-                        descrizione: this.uploadForm.descrizione,
-                        nomeFile: this.uploadForm.nomeFile || 'appunti_caricati.pdf',
-                        dataCaricamento: new Date().toLocaleDateString('it-IT'),
-                        corsoNome: selectedCourseObj ? selectedCourseObj.nome : 'Corso Generico',
-                        corsoId: this.uploadForm.corsoId,
-                        autoreNome: 'Tu (SuperPippo)',
-                        downloads: 0,
-                        rating: 5.0,
-                        tags: [selectedCourseObj ? selectedCourseObj.nome : 'Corso', 'Nuovo']
-                    };
+                    if (!this.uploadForm.file) {
+                        Toastify({
+                            text: "Seleziona un file PDF da caricare.",
+                            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                            duration: 3000
+                        }).showToast();
+                        return;
+                    }
 
-                    this.appunti.unshift(newAppunto);
+                    const formData = new FormData();
+                    formData.append('titolo', this.uploadForm.titolo);
+                    formData.append('descrizione', this.uploadForm.descrizione);
+                    formData.append('corsoId', this.uploadForm.corsoId);
+                    formData.append('file', this.uploadForm.file);
 
-                    // Reset form
-                    this.uploadForm.titolo = '';
-                    this.uploadForm.descrizione = '';
-                    this.uploadForm.corsoId = '';
-                    this.uploadForm.nomeFile = '';
+                    fetch('/Appunti/Upload', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.appunti.unshift(data.appunto);
 
-                    // Close modal
-                    const modalEl = document.getElementById('uploadModal');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) modal.hide();
+                            // Reset form
+                            this.uploadForm.titolo = '';
+                            this.uploadForm.descrizione = '';
+                            this.uploadForm.corsoId = '';
+                            this.uploadForm.nomeFile = '';
+                            this.uploadForm.file = null;
 
-                    Toastify({
-                        text: "Appunti caricati con successo!",
-                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
-                        duration: 3000
-                    }).showToast();
+                            // Reset file input element
+                            const fileInput = document.querySelector('input[type="file"]');
+                            if (fileInput) fileInput.value = '';
+
+                            // Close modal
+                            const modalEl = document.getElementById('uploadModal');
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+
+                            Toastify({
+                                text: "Appunti caricati con successo!",
+                                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                                duration: 3000
+                            }).showToast();
+                        } else {
+                            Toastify({
+                                text: data.message || "Errore durante il caricamento.",
+                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                duration: 3000
+                            }).showToast();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error uploading:', err);
+                        Toastify({
+                            text: "Errore durante l'invio del file al server.",
+                            backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                            duration: 3000
+                        }).showToast();
+                    });
                 }
             }
         });
