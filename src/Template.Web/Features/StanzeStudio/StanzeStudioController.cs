@@ -26,7 +26,7 @@ namespace Template.Web.Features.StanzeStudio
         public int DefaultDurationMinutes { get; set; }
     }
 
-    public class StanzeStudioController : AuthenticatedBaseController
+    public partial class StanzeStudioController : AuthenticatedBaseController
     {
         private readonly TemplateDbContext _dbContext;
         private readonly SharedService _sharedService;
@@ -38,7 +38,7 @@ namespace Template.Web.Features.StanzeStudio
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(string searchTerm, Guid? corsoId)
+        public async virtual Task<IActionResult> Index(string searchTerm, Guid? corsoId)
         {
             var stanze = await _sharedService.Query(new StanzeStudioAllQuery());
             var corsi = await _sharedService.Query(new CorsiAllQuery());
@@ -70,7 +70,7 @@ namespace Template.Web.Features.StanzeStudio
         }
 
         [HttpGet]
-        public async Task<IActionResult> Room(Guid id)
+        public async virtual Task<IActionResult> Room(Guid id)
         {
             var stanza = await _dbContext.StanzeStudio
                 .Include(x => x.Corso)
@@ -105,7 +105,7 @@ namespace Template.Web.Features.StanzeStudio
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(string name, Guid corsoId, int durationMinutes)
+        public async virtual Task<IActionResult> Create(string name, Guid corsoId, int durationMinutes)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
