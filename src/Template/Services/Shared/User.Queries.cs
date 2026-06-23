@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,6 +59,14 @@ namespace Template.Services.Shared
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string NickName { get; set; }
+        public double StudioOreLunedici { get; set; }
+        public double StudioOreMartedici { get; set; }
+        public double StudioOreMercoledici { get; set; }
+        public double StudioOreGiovedici { get; set; }
+        public double StudioOreVenerdici { get; set; }
+        public double StudioOreSabato { get; set; }
+        public double StudioOreDomenica { get; set; }
+        public int GiorniDiFila { get; set; }
     }
 
     public class CheckLoginCredentialsQuery
@@ -143,7 +151,15 @@ namespace Template.Services.Shared
                     Email = x.Email,
                     FirstName = x.FirstName,
                     LastName = x.LastName,
-                    NickName = x.NickName
+                    NickName = x.NickName,
+                    StudioOreLunedici = x.StudioOreLunedici,
+                    StudioOreMartedici = x.StudioOreMartedici,
+                    StudioOreMercoledici = x.StudioOreMercoledici,
+                    StudioOreGiovedici = x.StudioOreGiovedici,
+                    StudioOreVenerdici = x.StudioOreVenerdici,
+                    StudioOreSabato = x.StudioOreSabato,
+                    StudioOreDomenica = x.StudioOreDomenica,
+                    GiorniDiFila = x.GiorniDiFila
                 })
                 .FirstOrDefaultAsync();
         }

@@ -30,12 +30,39 @@ namespace Template.Web.Features.Home
 
             var userIdString = HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             string nickname = "Studente";
+            double oreStudioSettimana = 0;
+            int giorniDiFila = 0;
+            double oreStudioOggi = 0;
+            double[] oreStudioSettimanali = new double[7] { 0, 0, 0, 0, 0, 0, 0 };
+
             if (!string.IsNullOrEmpty(userIdString) && System.Guid.TryParse(userIdString, out var userId))
             {
                 var user = await _sharedService.Query(new UserDetailQuery { Id = userId });
                 if (user != null)
                 {
                     nickname = user.NickName ?? user.FirstName ?? user.Email;
+                    giorniDiFila = user.GiorniDiFila;
+
+                    oreStudioSettimanali[0] = user.StudioOreLunedici;
+                    oreStudioSettimanali[1] = user.StudioOreMartedici;
+                    oreStudioSettimanali[2] = user.StudioOreMercoledici;
+                    oreStudioSettimanali[3] = user.StudioOreGiovedici;
+                    oreStudioSettimanali[4] = user.StudioOreVenerdici;
+                    oreStudioSettimanali[5] = user.StudioOreSabato;
+                    oreStudioSettimanali[6] = user.StudioOreDomenica;
+
+                    oreStudioSettimana = user.StudioOreLunedici + user.StudioOreMartedici + user.StudioOreMercoledici + 
+                                         user.StudioOreGiovedici + user.StudioOreVenerdici + user.StudioOreSabato + 
+                                         user.StudioOreDomenica;
+
+                    var dayOfWeek = DateTime.Today.DayOfWeek;
+                    if (dayOfWeek == DayOfWeek.Monday) oreStudioOggi = user.StudioOreLunedici;
+                    else if (dayOfWeek == DayOfWeek.Tuesday) oreStudioOggi = user.StudioOreMartedici;
+                    else if (dayOfWeek == DayOfWeek.Wednesday) oreStudioOggi = user.StudioOreMercoledici;
+                    else if (dayOfWeek == DayOfWeek.Thursday) oreStudioOggi = user.StudioOreGiovedici;
+                    else if (dayOfWeek == DayOfWeek.Friday) oreStudioOggi = user.StudioOreVenerdici;
+                    else if (dayOfWeek == DayOfWeek.Saturday) oreStudioOggi = user.StudioOreSabato;
+                    else if (dayOfWeek == DayOfWeek.Sunday) oreStudioOggi = user.StudioOreDomenica;
                 }
             }
 
@@ -62,7 +89,11 @@ namespace Template.Web.Features.Home
                 Stanze = stanze,
                 NickName = nickname,
                 TotalStudentiOnline = totalOnline,
-                StanzaConsigliata = consigliata
+                StanzaConsigliata = consigliata,
+                OreStudioSettimana = oreStudioSettimana,
+                GiorniDiFila = giorniDiFila,
+                OreStudioOggi = oreStudioOggi,
+                OreStudioSettimanali = oreStudioSettimanali
             };
 
             return View(model);
