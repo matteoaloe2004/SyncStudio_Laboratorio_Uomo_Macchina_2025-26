@@ -19,6 +19,7 @@ namespace Template.Services.Shared
         public int OnlineCount { get; set; }
         public int MaxCapacity { get; set; }
         public bool IsPrivate { get; set; }
+        public string Descrizione { get; set; }
     }
 
     public partial class SharedService
@@ -43,7 +44,8 @@ namespace Template.Services.Shared
                     CorsoNome = s.Corso != null ? s.Corso.Nome : "Materia",
                     OnlineCount = 0,
                     MaxCapacity = s.MaxCapacity,
-                    IsPrivate = s.IsPrivate
+                    IsPrivate = s.IsPrivate,
+                    Descrizione = s.Descrizione
                 });
             }
 

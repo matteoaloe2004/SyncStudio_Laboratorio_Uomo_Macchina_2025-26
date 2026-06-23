@@ -22,6 +22,7 @@ namespace Template.Web.Features.StanzeStudio
         public Guid RoomId { get; set; }
         public string RoomName { get; set; }
         public string CorsoName { get; set; }
+        public string RoomDescription { get; set; }
         public string UserNickname { get; set; }
         public int DefaultDurationMinutes { get; set; }
         public int DefaultDurationSeconds { get; set; }
@@ -130,6 +131,7 @@ namespace Template.Web.Features.StanzeStudio
                 RoomId = stanza.Id,
                 RoomName = stanza.Nome,
                 CorsoName = stanza.Corso != null ? stanza.Corso.Nome : "Materia",
+                RoomDescription = stanza.Descrizione,
                 UserNickname = nickname,
                 DefaultDurationMinutes = (int)stanza.TempoRimanente.TotalMinutes,
                 DefaultDurationSeconds = (int)stanza.TempoRimanente.TotalSeconds,
@@ -141,7 +143,7 @@ namespace Template.Web.Features.StanzeStudio
         }
 
         [HttpPost]
-        public async virtual Task<IActionResult> Create(string name, Guid corsoId, int durationMinutes, int maxCapacity, string password)
+        public async virtual Task<IActionResult> Create(string name, Guid corsoId, int durationMinutes, int maxCapacity, string password, string description)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -167,7 +169,8 @@ namespace Template.Web.Features.StanzeStudio
                 IsInEsecuzione = false,
                 CorsoId = corsoId,
                 MaxCapacity = maxCapacity,
-                Password = string.IsNullOrWhiteSpace(password) ? null : password.Trim()
+                Password = string.IsNullOrWhiteSpace(password) ? null : password.Trim(),
+                Descrizione = string.IsNullOrWhiteSpace(description) ? null : description.Trim()
             };
 
             _dbContext.StanzeStudio.Add(newStanza);

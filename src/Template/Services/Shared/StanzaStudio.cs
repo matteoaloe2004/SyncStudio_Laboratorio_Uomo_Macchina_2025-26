@@ -28,6 +28,8 @@ namespace Template.Services.Shared
 
         public string Password { get; set; }
 
+        public string Descrizione { get; set; }
+
         [NotMapped]
         public bool IsPrivate => !string.IsNullOrEmpty(Password);
     }

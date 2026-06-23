@@ -118,7 +118,8 @@ namespace Template.Infrastructure
                     Nome = "Aula Analisi 1",
                     TempoRimanente = new TimeSpan(0, 18, 42),
                     IsInEsecuzione = true,
-                    CorsoId = corsoAnalisi.Id
+                    CorsoId = corsoAnalisi.Id,
+                    Descrizione = "Ripasso generale su limiti, derivate e calcolo di integrali definiti/indefiniti in preparazione all'esame scritto."
                 },
                 new StanzaStudio
                 {
@@ -126,7 +127,8 @@ namespace Template.Infrastructure
                     Nome = "Aula Fisica 1",
                     TempoRimanente = new TimeSpan(0, 5, 0),
                     IsInEsecuzione = false,
-                    CorsoId = corsoFisica.Id
+                    CorsoId = corsoFisica.Id,
+                    Descrizione = "Risoluzione esercizi su cinematica, dinamica del punto e leggi di conservazione dell'energia."
                 },
                 new StanzaStudio
                 {
@@ -134,7 +136,8 @@ namespace Template.Infrastructure
                     Nome = "Aula Algebra Lineare",
                     TempoRimanente = new TimeSpan(0, 22, 11),
                     IsInEsecuzione = true,
-                    CorsoId = corsoAlgebra.Id
+                    CorsoId = corsoAlgebra.Id,
+                    Descrizione = "Esercitazioni su matrici, calcolo del determinante, sistemi lineari e diagonalizzazione."
                 },
                 new StanzaStudio
                 {
@@ -142,7 +145,8 @@ namespace Template.Infrastructure
                     Nome = "Aula Chimica Organica",
                     TempoRimanente = new TimeSpan(0, 11, 30),
                     IsInEsecuzione = true,
-                    CorsoId = corsoChimica.Id
+                    CorsoId = corsoChimica.Id,
+                    Descrizione = "Studio dei meccanismi di reazione, sintesi degli alcheni e risonanza."
                 },
                 new StanzaStudio
                 {
@@ -150,7 +154,8 @@ namespace Template.Infrastructure
                     Nome = "Aula Probabilità",
                     TempoRimanente = new TimeSpan(0, 5, 0),
                     IsInEsecuzione = false,
-                    CorsoId = corsoProbabilita.Id
+                    CorsoId = corsoProbabilita.Id,
+                    Descrizione = "Calcolo delle probabilità condizionate, variabili aleatorie e teoremi limite."
                 },
                 new StanzaStudio
                 {
@@ -158,7 +163,8 @@ namespace Template.Infrastructure
                     Nome = "Aula Geometria",
                     TempoRimanente = new TimeSpan(0, 7, 55),
                     IsInEsecuzione = true,
-                    CorsoId = corsoGeometria.Id
+                    CorsoId = corsoGeometria.Id,
+                    Descrizione = "Ripasso di rette e piani nello spazio, coni, cilindri e superfici di rotazione."
                 }
             );
 

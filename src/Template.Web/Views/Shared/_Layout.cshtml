@@ -326,12 +326,12 @@
             <span id="studysync-minimized-timer-text">--:--</span>
             <span id="studysync-minimized-badge" class="chat-bubble-notification">0</span>
         </div>
-        <div class="minimized-info" onclick="window.location.href='/StanzeStudio/Room?id=' + sessionStorage.getItem('activeRoomId')">
+        <div class="minimized-info" onclick="window.location.href='/StanzeStudio/Room/' + sessionStorage.getItem('activeRoomId')">
             <p id="studysync-minimized-name" class="room-name">Stanza Studio</p>
             <p id="studysync-minimized-status" class="room-status">In corso...</p>
         </div>
         <div class="minimized-actions">
-            <a id="studysync-minimized-expand" href="#" title="Ingrandisci" onclick="event.preventDefault(); window.location.href='/StanzeStudio/Room?id=' + sessionStorage.getItem('activeRoomId')">
+            <a id="studysync-minimized-expand" href="#" title="Ingrandisci" onclick="event.preventDefault(); window.location.href='/StanzeStudio/Room/' + sessionStorage.getItem('activeRoomId')">
                 <i class="fa-solid fa-expand text-primary"></i>
             </a>
             <button id="studysync-minimized-leave" class="btn-leave" title="Abbandona Stanza">

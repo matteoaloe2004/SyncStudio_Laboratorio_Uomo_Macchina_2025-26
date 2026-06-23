@@ -109,6 +109,10 @@
                 <div>
                     <span class="text-secondary small fw-semibold">Stanza Studio • @Model.CorsoName</span>
                     <h2 class="fw-bold text-dark mb-0">@Model.RoomName</h2>
+                    @if (!string.IsNullOrEmpty(Model.RoomDescription))
+                    {
+                        <p class="text-muted small mb-0 mt-1"><i class="fa-solid fa-circle-info text-primary me-1"></i>@Model.RoomDescription</p>
+                    }
                 </div>
             </div>
             <div>

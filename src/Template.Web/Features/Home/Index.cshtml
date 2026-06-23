@@ -198,7 +198,15 @@
                 @if (Model.StanzaConsigliata != null)
                 {
                     <h5 class="fw-bold mb-1">@Model.StanzaConsigliata.CorsoNome</h5>
-                    <p class="small text-white-80 mb-3">@Model.StanzaConsigliata.OnlineCount studenti stanno studiando ora nella stanza "@Model.StanzaConsigliata.Nome". Timer: @string.Format("{0:00}:{1:00}", Model.StanzaConsigliata.TempoRimanente.Minutes, Model.StanzaConsigliata.TempoRimanente.Seconds)</p>
+                    <p class="small text-white-80 mb-2">@Model.StanzaConsigliata.OnlineCount studenti stanno studiando ora nella stanza "@Model.StanzaConsigliata.Nome". Timer: @string.Format("{0:00}:{1:00}", Model.StanzaConsigliata.TempoRimanente.Minutes, Model.StanzaConsigliata.TempoRimanente.Seconds)</p>
+                    @if (!string.IsNullOrEmpty(Model.StanzaConsigliata.Descrizione))
+                    {
+                        <p class="small text-white-80 italic border-top border-white-10 pt-2 mb-3"><i class="fa-solid fa-quote-left me-1 fs-8 opacity-75"></i>@Model.StanzaConsigliata.Descrizione</p>
+                    }
+                    else
+                    {
+                        <div class="mb-3"></div>
+                    }
                     <a href="/StanzeStudio/Room/@Model.StanzaConsigliata.Id" class="btn btn-white w-100 py-2.5 rounded-3 fw-semibold text-primary shadow-sm hover-scale d-flex align-items-center justify-content-center">
                         Entra subito <i class="fa-solid fa-arrow-right ms-2 fs-7"></i>
                     </a>

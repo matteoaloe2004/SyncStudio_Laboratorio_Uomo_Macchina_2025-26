@@ -71,7 +71,8 @@ namespace Template.Web.SignalR.Hubs
                     state.Participants.Count,
                     state.RemainingSeconds,
                     state.IsTimerRunning,
-                    state.IsBreak
+                    state.IsBreak,
+                    roomDb.Descrizione
                 );
             }
         }

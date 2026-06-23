@@ -3,6 +3,16 @@
     ViewData["Title"] = "Stanze di Studio";
 }
 
+<style>
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;  
+        overflow: hidden;
+        min-height: 38px;
+    }
+</style>
+
 <div id="app-lobby" class="container py-4" v-cloak>
     <!-- Header Section -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
@@ -72,7 +82,7 @@
         <div v-for="stanza in filteredStanze" :key="stanza.id" class="col-md-6 col-lg-4">
             <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white p-4 d-flex flex-column position-relative transition-all hover-translate-y">
                 <!-- Upper Section -->
-                <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
                         <span class="badge bg-primary-light text-primary rounded-pill px-2.5 py-1 fs-8 fw-semibold mb-2">{{ stanza.corsoNome }}</span>
                         <h5 class="fw-bold text-dark mb-0">
@@ -83,6 +93,11 @@
                         <i class="fa-solid fa-circle me-1 fs-10"></i>{{ stanza.isTimerRunning ? (stanza.isBreak ? 'Pausa' : 'Studio') : 'In Pausa' }}
                     </span>
                 </div>
+
+                <!-- Description -->
+                <p class="text-secondary small mb-3 text-truncate-2" :title="stanza.descrizione || 'Nessun argomento specificato.'">
+                    {{ stanza.descrizione || 'Nessun argomento specificato per questa sessione di studio.' }}
+                </p>
 
                 <!-- Info Grid -->
                 <div class="my-3 py-2 border-top border-bottom border-light">
@@ -133,6 +148,10 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label for="roomDescription" class="form-label fw-semibold small text-dark">Descrizione / Argomenti di studio</label>
+                        <textarea class="form-control rounded-3" id="roomDescription" name="description" rows="2" placeholder="Es. Preparazione esame, ripasso capitolo 4, risoluzione esercizi..."></textarea>
+                    </div>
+                    <div class="mb-3">
                         <label for="timerSelect" class="form-label fw-semibold small text-dark">Durata sessione Pomodoro (Minuti)</label>
                         <select class="form-select rounded-3" id="timerSelect" name="durationMinutes">
                             <option value="25">25 minuti (Classico)</option>
@@ -181,7 +200,8 @@
             remainingSeconds = (int)s.TempoRimanente.TotalSeconds,
             isTimerRunning = s.IsInEsecuzione,
             isBreak = false,
-            isPrivate = s.IsPrivate
+            isPrivate = s.IsPrivate,
+            descrizione = s.Descrizione
         })));
 
         new Vue({
@@ -211,13 +231,14 @@
                         .configureLogging(signalR.LogLevel.Error)
                         .build();
 
-                    this.connection.on('LobbyRoomUpdated', (roomId, nome, corsoNome, corsoId, onlineCount, remainingSeconds, isRunning, isBreak) => {
+                    this.connection.on('LobbyRoomUpdated', (roomId, nome, corsoNome, corsoId, onlineCount, remainingSeconds, isRunning, isBreak, descrizione) => {
                         let room = this.stanze.find(s => s.id === roomId);
                         if (room) {
                             room.onlineCount = onlineCount;
                             room.remainingSeconds = remainingSeconds;
                             room.isTimerRunning = isRunning;
                             room.isBreak = isBreak;
+                            room.descrizione = descrizione;
                         } else {
                             this.stanze.push({
                                 id: roomId,
@@ -228,7 +249,8 @@
                                 maxCapacity: 8,
                                 remainingSeconds: remainingSeconds,
                                 isTimerRunning: isRunning,
-                                isBreak: isBreak
+                                isBreak: isBreak,
+                                descrizione: descrizione
                             });
                         }
                     });
