@@ -68,7 +68,25 @@ namespace Template.Infrastructure
                 GiorniDiFila = 7
             };
 
-            context.Users.AddRange(user1, user2, user3);
+            var user4 = new User
+            {
+                Id = Guid.Parse("f62e8417-64df-419b-abff-5823528b8098"), // Forced Guid for presentation
+                Email = "matteoaloe2004@libero.it",
+                Password = "M0Cuk9OsrcS/rTLGf5SY6DUPqU2rGc1wwV2IL88GVGo=", // SHA-256 of text "Prova"
+                FirstName = "Matteo",
+                LastName = "Aloe",
+                NickName = "Matteo",
+                StudioOreLunedici = 3.5,
+                StudioOreMartedici = 4.0,
+                StudioOreMercoledici = 2.0,
+                StudioOreGiovedici = 5.5,
+                StudioOreVenerdici = 4.5,
+                StudioOreSabato = 2.5,
+                StudioOreDomenica = 1.0,
+                GiorniDiFila = 12
+            };
+
+            context.Users.AddRange(user1, user2, user3, user4);
 
             // Seed Corsi (Courses)
             var corsoAnalisi = new Corso

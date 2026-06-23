@@ -131,10 +131,18 @@
                         var height = (int)(hours / maxHoursVal * 120);
                         if (hours > 0 && height < 10) height = 10;
                         var isToday = DateTime.Today.DayOfWeek == dayOfWeek;
+                        var showInside = height >= 22;
 
                         <div class="chart-column text-center flex-fill">
-                            <div class="chart-bar @(isToday ? "bg-primary" : "bg-primary-light") rounded-top-2 mx-auto position-relative" style="height: @(height)px; width: 32px;" title="@(hours.ToString("0.0"))h">
-                                <span class="chart-bar-value fs-9 text-dark @(isToday ? "fw-bold" : "fw-semibold") position-absolute top-0 start-50 translate-middle-x mt-n4">@(hours.ToString("0.0"))h</span>
+                            <div class="chart-bar rounded-top-2 mx-auto position-relative" style="height: @(height)px; width: 32px; background-color: @(isToday ? "var(--bs-primary)" : "rgba(37, 99, 235, 0.45)");" title="@(hours.ToString("0.0"))h">
+                                @if (showInside)
+                                {
+                                    <span class="chart-bar-value fs-9 text-white fw-bold position-absolute top-0 start-50 translate-middle-x mt-1">@(hours.ToString("0.0"))h</span>
+                                }
+                                else
+                                {
+                                    <span class="chart-bar-value fs-9 text-secondary fw-bold position-absolute top-0 start-50 translate-middle-x mt-n4">@(hours.ToString("0.0"))h</span>
+                                }
                             </div>
                             <span class="chart-label d-block mt-2 @(isToday ? "text-dark fw-bold" : "text-secondary small")">@dayLabel</span>
                         </div>

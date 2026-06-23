@@ -18,7 +18,7 @@ namespace Template.Web.SignalR.Hubs
         Task ReceiveChatMessage(string userName, string text, string time);
         Task TimerUpdated(bool isRunning, int remainingSeconds, bool isBreak);
         Task TasksUpdated(System.Collections.Generic.List<RoomTask> tasks);
-        Task LobbyRoomUpdated(Guid roomId, string nome, string corsoNome, Guid corsoId, int onlineCount, int remainingSeconds, bool isRunning, bool isBreak);
+        Task LobbyRoomUpdated(Guid roomId, string nome, string corsoNome, Guid corsoId, int onlineCount, int remainingSeconds, bool isRunning, bool isBreak, string descrizione);
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
