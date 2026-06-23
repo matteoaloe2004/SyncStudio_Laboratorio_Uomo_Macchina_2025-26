@@ -25,6 +25,7 @@ namespace Template.Web.Features.StanzeStudio
         public List<RoomTask> Tasks { get; set; } = new List<RoomTask>();
         public List<RoomChatMessage> Messages { get; set; } = new List<RoomChatMessage>();
         public List<string> Participants { get; set; } = new List<string>();
+        public List<(string UserName, Guid UserId)> ParticipantsWithIds { get; set; } = new List<(string UserName, Guid UserId)>();
         public bool IsTimerRunning { get; set; }
         public DateTime? TimerStartedAt { get; set; }
         public int SecondsAtStart { get; set; } = 25 * 60;
@@ -56,20 +57,45 @@ namespace Template.Web.Features.StanzeStudio
         void ToggleTask(Guid roomId, string taskId);
         void DeleteTask(Guid roomId, string taskId);
         void AddMessage(Guid roomId, RoomChatMessage msg);
-        void AddParticipant(Guid roomId, string connectionId, string userName);
-        (Guid RoomId, string UserName)? RemoveParticipant(string connectionId);
+        void AddParticipant(Guid roomId, string connectionId, string userName, Guid userId);
+        (Guid RoomId, string UserName, Guid UserId)? RemoveParticipant(string connectionId);
         void UpdateTimer(Guid roomId, bool isRunning, int remainingSeconds, bool isBreak);
         List<string> GetParticipants(Guid roomId);
+        List<(string UserName, Guid UserId)> GetParticipantsWithUserIds(Guid roomId);
     }
 
     public class RoomStateManager : IRoomStateManager
     {
         private readonly ConcurrentDictionary<Guid, RoomState> _states = new ConcurrentDictionary<Guid, RoomState>();
-        private readonly ConcurrentDictionary<string, (Guid RoomId, string UserName)> _connections = new ConcurrentDictionary<string, (Guid RoomId, string UserName)>();
+        private readonly ConcurrentDictionary<string, (Guid RoomId, string UserName, Guid UserId)> _connections = new ConcurrentDictionary<string, (Guid RoomId, string UserName, Guid UserId)>();
+        private readonly Microsoft.Extensions.DependencyInjection.IServiceScopeFactory _scopeFactory;
+
+        public RoomStateManager(Microsoft.Extensions.DependencyInjection.IServiceScopeFactory scopeFactory)
+        {
+            _scopeFactory = scopeFactory;
+        }
 
         public RoomState GetOrCreateState(Guid roomId)
         {
-            return _states.GetOrAdd(roomId, id => new RoomState { RoomId = id });
+            return _states.GetOrAdd(roomId, id =>
+            {
+                using (var scope = _scopeFactory.CreateScope())
+                {
+                    var dbContext = scope.ServiceProvider.GetRequiredService<Services.TemplateDbContext>();
+                    var room = dbContext.StanzeStudio.AsNoTracking().FirstOrDefault(r => r.Id == id);
+                    if (room != null)
+                    {
+                        return new RoomState
+                        {
+                            RoomId = id,
+                            IsTimerRunning = room.IsInEsecuzione,
+                            SecondsAtStart = (int)room.TempoRimanente.TotalSeconds,
+                            TimerStartedAt = room.IsInEsecuzione ? DateTime.UtcNow : null
+                        };
+                    }
+                }
+                return new RoomState { RoomId = id };
+            });
         }
 
         public void AddTask(Guid roomId, RoomTask task)
@@ -116,7 +142,7 @@ namespace Template.Web.Features.StanzeStudio
             }
         }
 
-        public void AddParticipant(Guid roomId, string connectionId, string userName)
+        public void AddParticipant(Guid roomId, string connectionId, string userName, Guid userId)
         {
             var state = GetOrCreateState(roomId);
             lock (state)
@@ -125,11 +151,15 @@ namespace Template.Web.Features.StanzeStudio
                 {
                     state.Participants.Add(userName);
                 }
+                if (!state.ParticipantsWithIds.Any(p => p.UserId == userId))
+                {
+                    state.ParticipantsWithIds.Add((userName, userId));
+                }
             }
-            _connections[connectionId] = (roomId, userName);
+            _connections[connectionId] = (roomId, userName, userId);
         }
 
-        public (Guid RoomId, string UserName)? RemoveParticipant(string connectionId)
+        public (Guid RoomId, string UserName, Guid UserId)? RemoveParticipant(string connectionId)
         {
             if (_connections.TryRemove(connectionId, out var info))
             {
@@ -140,6 +170,7 @@ namespace Template.Web.Features.StanzeStudio
                     if (!hasOtherConnections)
                     {
                         state.Participants.Remove(info.UserName);
+                        state.ParticipantsWithIds.RemoveAll(p => p.UserId == info.UserId);
                     }
                 }
                 return info;
@@ -175,5 +206,15 @@ namespace Template.Web.Features.StanzeStudio
                 return state.Participants.ToList();
             }
         }
+
+        public List<(string UserName, Guid UserId)> GetParticipantsWithUserIds(Guid roomId)
+        {
+            var state = GetOrCreateState(roomId);
+            lock (state)
+            {
+                return state.ParticipantsWithIds.ToList();
+            }
+        }
     }
 }
+

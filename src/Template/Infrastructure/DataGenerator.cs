@@ -21,7 +21,15 @@ namespace Template.Infrastructure
                 Password = "M0Cuk9OsrcS/rTLGf5SY6DUPqU2rGc1wwV2IL88GVGo=", // SHA-256 of text "Prova"
                 FirstName = "Nome1",
                 LastName = "Cognome1",
-                NickName = "Nickname1"
+                NickName = "Nickname1",
+                StudioOreLunedici = 2.5,
+                StudioOreMartedici = 3.0,
+                StudioOreMercoledici = 1.5,
+                StudioOreGiovedici = 4.0,
+                StudioOreVenerdici = 2.0,
+                StudioOreSabato = 5.0,
+                StudioOreDomenica = 3.5,
+                GiorniDiFila = 5
             };
 
             var user2 = new User
@@ -31,7 +39,15 @@ namespace Template.Infrastructure
                 Password = "Uy6qvZV0iA2/drm4zACDLCCm7BE9aCKZVQ16bg80XiU=", // SHA-256 of text "Test"
                 FirstName = "Nome2",
                 LastName = "Cognome2",
-                NickName = "Nickname2"
+                NickName = "Nickname2",
+                StudioOreLunedici = 1.0,
+                StudioOreMartedici = 1.5,
+                StudioOreMercoledici = 2.0,
+                StudioOreGiovedici = 0.5,
+                StudioOreVenerdici = 1.0,
+                StudioOreSabato = 0.0,
+                StudioOreDomenica = 0.0,
+                GiorniDiFila = 2
             };
 
             var user3 = new User
@@ -41,7 +57,15 @@ namespace Template.Infrastructure
                 Password = "Uy6qvZV0iA2/drm4zACDLCCm7BE9aCKZVQ16bg80XiU=", // SHA-256 of text "Test"
                 FirstName = "Nome3",
                 LastName = "Cognome3",
-                NickName = "Nickname3"
+                NickName = "Nickname3",
+                StudioOreLunedici = 4.0,
+                StudioOreMartedici = 3.5,
+                StudioOreMercoledici = 5.0,
+                StudioOreGiovedici = 2.5,
+                StudioOreVenerdici = 3.0,
+                StudioOreSabato = 1.0,
+                StudioOreDomenica = 2.0,
+                GiorniDiFila = 7
             };
 
             context.Users.AddRange(user1, user2, user3);
