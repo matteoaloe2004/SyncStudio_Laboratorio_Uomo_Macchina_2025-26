@@ -92,6 +92,19 @@ namespace Template.Web.Features.StanzeStudio
                 return NotFound();
             }
 
+            var userIdString = HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            Guid.TryParse(userIdString, out Guid userId);
+
+            if (userId != Guid.Empty)
+            {
+                var activeRoomId = _roomStateManager.GetActiveRoomIdForUser(userId);
+                if (activeRoomId.HasValue && activeRoomId.Value != id)
+                {
+                    TempData["ErrorMessage"] = "Sei già all'interno di un'altra stanza di studio. Per favore, esci dalla stanza corrente prima di accedere ad una nuova.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
             // If private room and no/wrong password, show password form
             if (stanza.IsPrivate && stanza.Password != pwd)
             {
@@ -102,9 +115,8 @@ namespace Template.Web.Features.StanzeStudio
                 return View("RoomPassword");
             }
 
-            var userIdString = HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             string nickname = "Studente";
-            if (!string.IsNullOrEmpty(userIdString) && Guid.TryParse(userIdString, out var userId))
+            if (userId != Guid.Empty)
             {
                 var user = await _sharedService.Query(new UserDetailQuery { Id = userId });
                 if (user != null)

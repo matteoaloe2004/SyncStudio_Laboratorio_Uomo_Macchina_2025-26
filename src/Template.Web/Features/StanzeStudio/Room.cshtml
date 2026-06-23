@@ -112,9 +112,9 @@
                 </div>
             </div>
             <div>
-                <a href="/StanzeStudio" class="btn btn-outline-secondary rounded-pill px-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" @@click="showLeaveModal">
                     <i class="fa-solid fa-arrow-left me-2"></i>Esci dalla Stanza
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -472,47 +472,49 @@
                         }
                     });
                 },
-                handleBeforeUnload(e) {
-                    e.preventDefault();
-                    e.returnValue = 'Ehi, vuoi davvero lasciare la stanza?';
-                    return e.returnValue;
-                },
-                handleLinkClick(e) {
-                    const anchor = e.target.closest('a');
-                    if (anchor && anchor.href && !anchor.href.includes('#') && !anchor.href.startsWith('javascript:')) {
-                        // Allow user menu dropdown to toggle without confirmation
-                        if (anchor.classList.contains('dropdown-toggle') || anchor.id === 'userMenuDropdown') return;
+                showLeaveModal() {
+                    const modal = document.getElementById('studysync-leave-modal');
+                    const cancelBtn = document.getElementById('studysync-modal-cancel');
+                    const confirmBtn = document.getElementById('studysync-modal-confirm');
+                    if (modal) {
+                        modal.style.display = 'flex';
                         
-                        e.preventDefault();
-                        if (confirm('Ehi, vuoi davvero lasciare la stanza?')) {
-                            // Remove event listener to prevent double confirmation
-                            window.removeEventListener('beforeunload', this.handleBeforeUnload);
-                            document.removeEventListener('click', this.handleLinkClick);
+                        const cleanUpAndLeave = () => {
+                            modal.style.display = 'none';
+                            sessionStorage.removeItem('activeRoomId');
+                            sessionStorage.removeItem('activeRoomName');
+                            sessionStorage.removeItem('activeRoomCorso');
+                            sessionStorage.removeItem('userNickname');
                             
-                            // Send LeaveRoom SignalR notification and navigate
                             this.leaveRoomBeforeNavigate();
-                            window.location.href = anchor.href;
-                        }
+                            window.location.href = '/StanzeStudio';
+                        };
+                        
+                        const handleCancel = () => {
+                            modal.style.display = 'none';
+                            confirmBtn.removeEventListener('click', cleanUpAndLeave);
+                        };
+                        
+                        confirmBtn.addEventListener('click', cleanUpAndLeave, { once: true });
+                        cancelBtn.addEventListener('click', handleCancel, { once: true });
                     }
                 }
             },
             mounted() {
                 this.initSignalR();
                 
+                // Write active room state to sessionStorage for the minimized layout widget
+                sessionStorage.setItem('activeRoomId', this.roomId);
+                sessionStorage.setItem('activeRoomName', '@Model.RoomName');
+                sessionStorage.setItem('activeRoomCorso', '@Model.CorsoName');
+                sessionStorage.setItem('userNickname', this.userNickname);
+
                 // Ask for browser notification permission
                 if (window.Notification && Notification.permission !== "denied") {
                     Notification.requestPermission();
                 }
-
-                // Warn user when trying to close the tab or reload
-                window.addEventListener('beforeunload', this.handleBeforeUnload);
-
-                // Intercept navigation links click
-                document.addEventListener('click', this.handleLinkClick);
             },
             beforeDestroy() {
-                window.removeEventListener('beforeunload', this.handleBeforeUnload);
-                document.removeEventListener('click', this.handleLinkClick);
                 this.leaveRoomBeforeNavigate();
                 if (this.timerInterval) {
                     clearInterval(this.timerInterval);

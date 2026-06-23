@@ -11,6 +11,238 @@
 }
 @section styles{
     @RenderSection("styles", false)
+    <style>
+        /* StudySync Minimized Room Widget Styles */
+        #studysync-minimized-room {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1050;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(220, 220, 220, 0.4);
+            border-radius: 20px;
+            padding: 12px 18px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #studysync-minimized-room:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(111, 66, 193, 0.2);
+            border-color: rgba(111, 66, 193, 0.4);
+        }
+
+        .minimized-timer-ring {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(111, 66, 193, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: #6f42c1;
+            position: relative;
+            border: 2.5px solid #6f42c1;
+            transition: all 0.3s ease;
+        }
+
+        .minimized-timer-ring.is-break {
+            border-color: #198754;
+            color: #198754;
+            background: rgba(25, 135, 84, 0.05);
+        }
+
+        .minimized-info {
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        .minimized-info .room-name {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #212529;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .minimized-info .room-status {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin: 0;
+            margin-top: 1px;
+        }
+
+        .minimized-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 8px;
+            border-left: 1px solid rgba(0, 0, 0, 0.08);
+            padding-left: 8px;
+        }
+
+        .minimized-actions button, .minimized-actions a {
+            background: none;
+            border: none;
+            color: #6c757d;
+            padding: 6px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-size: 0.9rem;
+            width: 28px;
+            height: 28px;
+        }
+
+        .minimized-actions button:hover, .minimized-actions a:hover {
+            background: rgba(0, 0, 0, 0.06);
+            color: #212529;
+        }
+
+        .minimized-actions button.btn-leave:hover {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .chat-bubble-notification {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #dc3545;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @@keyframes pulse-badge {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        /* Custom Leave Modal Styles */
+        .studysync-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 10, 25, 0.45);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 2100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            animation: fade-in 0.2s ease;
+        }
+
+        @@keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .studysync-modal-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 380px;
+            padding: 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            animation: modal-enter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @@keyframes modal-enter {
+            from { transform: scale(0.9) translateY(15px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .studysync-modal-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(220, 53, 69, 0.08);
+            color: #dc3545;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 16px;
+            border: 1.5px solid rgba(220, 53, 69, 0.15);
+        }
+
+        .studysync-modal-title {
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .studysync-modal-text {
+            font-size: 0.88rem;
+            color: #6c757d;
+            line-height: 1.45;
+            margin-bottom: 24px;
+        }
+
+        .studysync-modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .studysync-modal-btn {
+            flex: 1;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .studysync-modal-btn-cancel {
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+
+        .studysync-modal-btn-cancel:hover {
+            background: #e9ecef;
+        }
+
+        .studysync-modal-btn-confirm {
+            background: #dc3545;
+            color: white;
+        }
+
+        .studysync-modal-btn-confirm:hover {
+            background: #bb2d3b;
+        }
+    </style>
 }
 <div id="pageId" class="onit-page">
     <div class="onit-page-sticky-top" id="onit-page-sticky-top">
@@ -72,6 +304,41 @@
     </div>
     @RenderSection("pageSubtitle", false)
     @RenderBody()
+
+    <!-- StudySync Custom Leave Modal -->
+    <div id="studysync-leave-modal" class="studysync-modal-backdrop">
+        <div class="studysync-modal-card">
+            <div class="studysync-modal-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="studysync-modal-title">Abbandonare la Stanza?</h4>
+            <p class="studysync-modal-text">Se esci perderai i progressi del timer corrente e non sarai più visibile ai tuoi colleghi.</p>
+            <div class="studysync-modal-buttons">
+                <button id="studysync-modal-cancel" class="studysync-modal-btn studysync-modal-btn-cancel">Annulla</button>
+                <button id="studysync-modal-confirm" class="studysync-modal-btn studysync-modal-btn-confirm">Esci</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- StudySync Minimized Room Widget -->
+    <div id="studysync-minimized-room">
+        <div id="studysync-minimized-timer" class="minimized-timer-ring">
+            <span id="studysync-minimized-timer-text">--:--</span>
+            <span id="studysync-minimized-badge" class="chat-bubble-notification">0</span>
+        </div>
+        <div class="minimized-info" onclick="window.location.href='/StanzeStudio/Room?id=' + sessionStorage.getItem('activeRoomId')">
+            <p id="studysync-minimized-name" class="room-name">Stanza Studio</p>
+            <p id="studysync-minimized-status" class="room-status">In corso...</p>
+        </div>
+        <div class="minimized-actions">
+            <a id="studysync-minimized-expand" href="#" title="Ingrandisci" onclick="event.preventDefault(); window.location.href='/StanzeStudio/Room?id=' + sessionStorage.getItem('activeRoomId')">
+                <i class="fa-solid fa-expand text-primary"></i>
+            </a>
+            <button id="studysync-minimized-leave" class="btn-leave" title="Abbandona Stanza">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </div>
 </div>
 @section googlehead{
     @*<script async src="https://www.googletagmanager.com/gtag/js?id=UA-"></script>
@@ -85,6 +352,141 @@
 @section scripts{
     <script type="text/javascript">
         @this.RenderAlertsWithToastify()
+    </script>
+
+    <script type="text/javascript">
+        (function () {
+            document.addEventListener("DOMContentLoaded", function () {
+                const path = window.location.pathname.toLowerCase();
+                const isInRoomPage = path.includes('/stanzestudio/room');
+                const activeRoomId = sessionStorage.getItem('activeRoomId');
+                
+                // If we are on the room page, don't show the minimized floating widget
+                if (isInRoomPage) {
+                    return;
+                }
+
+                if (!activeRoomId) {
+                    return;
+                }
+
+                const roomName = sessionStorage.getItem('activeRoomName') || 'Stanza Studio';
+                const roomCorso = sessionStorage.getItem('activeRoomCorso') || 'Materia';
+                const userNickname = sessionStorage.getItem('userNickname') || 'Studente';
+
+                // Show widget
+                const widget = document.getElementById('studysync-minimized-room');
+                const nameEl = document.getElementById('studysync-minimized-name');
+                const statusEl = document.getElementById('studysync-minimized-status');
+                const timerTextEl = document.getElementById('studysync-minimized-timer-text');
+                const timerRingEl = document.getElementById('studysync-minimized-timer');
+                const badgeEl = document.getElementById('studysync-minimized-badge');
+
+                if (widget) {
+                    widget.style.display = 'flex';
+                    nameEl.textContent = roomName;
+                    statusEl.textContent = roomCorso;
+                }
+
+                let unreadCount = 0;
+                let timerInterval = null;
+                let isRunning = false;
+                let remainingSeconds = 0;
+                let isBreak = false;
+
+                // Connect to SignalR
+                if (typeof signalR !== 'undefined') {
+                    const connection = new signalR.HubConnectionBuilder()
+                        .withUrl("/templateHub")
+                        .build();
+
+                    connection.on("TimerUpdated", (running, seconds, breakMode) => {
+                        isRunning = running;
+                        remainingSeconds = seconds;
+                        isBreak = breakMode;
+
+                        updateTimerUI();
+                        startLocalTimer();
+                    });
+
+                    connection.on("ReceiveChatMessage", (user, text, time) => {
+                        if (user !== userNickname) {
+                            unreadCount++;
+                            badgeEl.textContent = unreadCount;
+                            badgeEl.style.display = 'flex';
+                        }
+                    });
+
+                    connection.start()
+                        .then(() => {
+                            connection.invoke("JoinRoom", activeRoomId, userNickname);
+                        })
+                        .catch(err => console.error("Error starting SignalR in minimized widget:", err));
+
+                    // Leave Room Action
+                    const leaveBtn = document.getElementById('studysync-minimized-leave');
+                    const modal = document.getElementById('studysync-leave-modal');
+                    const cancelBtn = document.getElementById('studysync-modal-cancel');
+                    const confirmBtn = document.getElementById('studysync-modal-confirm');
+
+                    if (leaveBtn && modal) {
+                        leaveBtn.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            modal.style.display = 'flex';
+                        });
+
+                        cancelBtn.addEventListener('click', function () {
+                            modal.style.display = 'none';
+                        });
+
+                        confirmBtn.addEventListener('click', function () {
+                            modal.style.display = 'none';
+                            connection.invoke("LeaveRoom", activeRoomId, userNickname)
+                                .then(() => {
+                                    sessionStorage.removeItem('activeRoomId');
+                                    sessionStorage.removeItem('activeRoomName');
+                                    sessionStorage.removeItem('activeRoomCorso');
+                                    sessionStorage.removeItem('userNickname');
+                                    widget.style.display = 'none';
+                                    connection.stop();
+                                })
+                                .catch(err => console.error(err));
+                        });
+                    }
+                }
+
+                function updateTimerUI() {
+                    const mins = Math.floor(remainingSeconds / 60);
+                    const secs = remainingSeconds % 60;
+                    timerTextEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    
+                    if (isBreak) {
+                        timerRingEl.classList.add('is-break');
+                    } else {
+                        timerRingEl.classList.remove('is-break');
+                    }
+                }
+
+                function startLocalTimer() {
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
+
+                    if (isRunning) {
+                        timerInterval = setInterval(() => {
+                            if (remainingSeconds > 0) {
+                                remainingSeconds--;
+                                updateTimerUI();
+                            } else {
+                                clearInterval(timerInterval);
+                                timerInterval = null;
+                            }
+                        }, 1000);
+                    }
+                }
+            });
+        })();
     </script>
 
     @RenderSection("scripts", false)

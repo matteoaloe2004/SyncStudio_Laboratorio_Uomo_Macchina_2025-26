@@ -64,6 +64,7 @@ namespace Template.Web.Features.StanzeStudio
         void UpdateTimer(Guid roomId, bool isRunning, int remainingSeconds, bool isBreak);
         List<string> GetParticipants(Guid roomId);
         List<(string UserName, Guid UserId)> GetParticipantsWithUserIds(Guid roomId);
+        Guid? GetActiveRoomIdForUser(Guid userId);
     }
 
     public class RoomStateManager : IRoomStateManager
@@ -216,6 +217,13 @@ namespace Template.Web.Features.StanzeStudio
             {
                 return state.ParticipantsWithIds.ToList();
             }
+        }
+
+        public Guid? GetActiveRoomIdForUser(Guid userId)
+        {
+            if (userId == Guid.Empty) return null;
+            var conn = _connections.Values.FirstOrDefault(c => c.UserId == userId);
+            return conn.RoomId == Guid.Empty ? (Guid?)null : conn.RoomId;
         }
     }
 }

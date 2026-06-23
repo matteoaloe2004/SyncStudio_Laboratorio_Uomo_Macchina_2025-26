@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="~/node_modules/@@fortawesome/fontawesome-free/css/all.min.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/css/bundle-global.min.css" asp-append-version="true" rel="stylesheet" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
     @RenderSection("styles", false)
 </head>
 <body>
@@ -26,6 +27,7 @@
     <environment exclude="Development,Docker">
         <script src="~/js/bundle-global.min.js" asp-append-version="true"></script>
     </environment>
+    <script src="~/js/bundle-signalr.js" asp-append-version="true"></script>
     @RenderSection("scripts", required: false)
 </body>
 </html>
