@@ -11,7 +11,7 @@
             <p class="text-secondary mb-0">Collabora e studia in tempo reale con altri studenti usando il metodo Pomodoro</p>
         </div>
         <div>
-            <button class="btn btn-primary rounded-pill shadow-sm px-4 py-2" data-bs-toggle="modal" data-bs-target="#createRoomModal">
+            <button class="btn btn-primary rounded-pill shadow-sm px-4 py-2" @@click="checkCreateRoom">
                 <i class="fa-solid fa-plus me-2"></i>Crea Nuova Stanza
             </button>
         </div>
@@ -63,7 +63,7 @@
             <i class="fa-solid fa-ghost fs-1 text-muted mb-3 opacity-50"></i>
             <h5 class="fw-bold text-dark">Nessuna stanza trovata</h5>
             <p class="text-secondary max-w-md mx-auto">Non ci sono stanze di studio attive per i criteri di ricerca impostati. Crea una nuova stanza per iniziare!</p>
-            <button class="btn btn-primary rounded-pill shadow-sm px-4 mt-2" data-bs-toggle="modal" data-bs-target="#createRoomModal">
+            <button class="btn btn-primary rounded-pill shadow-sm px-4 mt-2" @@click="checkCreateRoom">
                 <i class="fa-solid fa-plus me-2"></i>Crea la prima stanza
             </button>
         </div>
@@ -100,9 +100,9 @@
 
                 <!-- Footer / Actions -->
                 <div class="mt-auto pt-3">
-                    <a :href="'/StanzeStudio/Room/' + stanza.id" class="btn btn-primary w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center">
+                    <button type="button" @@click="enterRoom(stanza)" class="btn btn-primary w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center">
                         Entra nella Stanza <i class="fa-solid fa-right-to-bracket ms-2 fs-7"></i>
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -245,6 +245,26 @@
                     const mins = Math.floor(seconds / 60);
                     const secs = seconds % 60;
                     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                },
+                enterRoom(stanza) {
+                    const activeRoomId = sessionStorage.getItem('activeRoomId');
+                    if (activeRoomId && activeRoomId !== stanza.id) {
+                        alert("Sei già all'interno di un'altra stanza di studio. Per favore, esci dalla stanza corrente prima di accedere ad una nuova.");
+                        return;
+                    }
+                    window.location.href = '/StanzeStudio/Room/' + stanza.id;
+                },
+                checkCreateRoom() {
+                    const activeRoomId = sessionStorage.getItem('activeRoomId');
+                    if (activeRoomId) {
+                        alert("Sei già all'interno di una stanza di studio. Per favore, esci dalla stanza corrente prima di crearne una nuova.");
+                        return;
+                    }
+                    const modalEl = document.getElementById('createRoomModal');
+                    if (modalEl) {
+                        const modal = new bootstrap.Modal(modalEl);
+                        modal.show();
+                    }
                 }
             },
             mounted() {
