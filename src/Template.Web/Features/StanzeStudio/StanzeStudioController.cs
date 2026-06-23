@@ -24,6 +24,7 @@ namespace Template.Web.Features.StanzeStudio
         public string CorsoName { get; set; }
         public string UserNickname { get; set; }
         public int DefaultDurationMinutes { get; set; }
+        public int DefaultDurationSeconds { get; set; }
         public bool IsPrivate { get; set; }
         public int MaxCapacity { get; set; }
     }
@@ -119,6 +120,7 @@ namespace Template.Web.Features.StanzeStudio
                 CorsoName = stanza.Corso != null ? stanza.Corso.Nome : "Materia",
                 UserNickname = nickname,
                 DefaultDurationMinutes = (int)stanza.TempoRimanente.TotalMinutes,
+                DefaultDurationSeconds = (int)stanza.TempoRimanente.TotalSeconds,
                 IsPrivate = stanza.IsPrivate,
                 MaxCapacity = stanza.MaxCapacity
             };

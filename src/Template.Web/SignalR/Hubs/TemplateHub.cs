@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Template.Services;
 using Template.Web.Features.StanzeStudio;
@@ -78,7 +79,11 @@ namespace Template.Web.SignalR.Hubs
         public async Task JoinRoom(Guid roomId, string userName)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString());
-            _roomStateManager.AddParticipant(roomId, Context.ConnectionId, userName);
+            
+            var userIdString = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            Guid.TryParse(userIdString, out Guid userId);
+            
+            _roomStateManager.AddParticipant(roomId, Context.ConnectionId, userName, userId);
 
             var state = _roomStateManager.GetOrCreateState(roomId);
 
@@ -127,8 +132,42 @@ namespace Template.Web.SignalR.Hubs
 
         public async Task UpdateTimer(Guid roomId, bool isRunning, int remainingSeconds, bool isBreak)
         {
+            var state = _roomStateManager.GetOrCreateState(roomId);
+            bool wasRunning = state.IsTimerRunning;
+            bool wasBreak = state.IsBreak;
+            int secondsAtStart = state.SecondsAtStart;
+
             _roomStateManager.UpdateTimer(roomId, isRunning, remainingSeconds, isBreak);
             await Clients.Group(roomId.ToString()).TimerUpdated(isRunning, remainingSeconds, isBreak);
+
+            // If it transitioned from running to stopped, and was not a break, and remainingSeconds == 0:
+            if (wasRunning && !isRunning && !wasBreak && remainingSeconds == 0)
+            {
+                var participants = _roomStateManager.GetParticipantsWithUserIds(roomId);
+                if (participants.Any())
+                {
+                    double hoursToAdd = secondsAtStart / 3600.0;
+                    foreach (var p in participants)
+                    {
+                        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == p.UserId);
+                        if (user != null)
+                        {
+                            var dayOfWeek = DateTime.Today.DayOfWeek;
+                            if (dayOfWeek == DayOfWeek.Monday) user.StudioOreLunedici += hoursToAdd;
+                            else if (dayOfWeek == DayOfWeek.Tuesday) user.StudioOreMartedici += hoursToAdd;
+                            else if (dayOfWeek == DayOfWeek.Wednesday) user.StudioOreMercoledici += hoursToAdd;
+                            else if (dayOfWeek == DayOfWeek.Thursday) user.StudioOreGiovedici += hoursToAdd;
+                            else if (dayOfWeek == DayOfWeek.Friday) user.StudioOreVenerdici += hoursToAdd;
+                            else if (dayOfWeek == DayOfWeek.Saturday) user.StudioOreSabato += hoursToAdd;
+                            else if (dayOfWeek == DayOfWeek.Sunday) user.StudioOreDomenica += hoursToAdd;
+
+                            // Also ensure the user's streak has a default value if not set
+                            if (user.GiorniDiFila == 0) user.GiorniDiFila = 1;
+                        }
+                    }
+                    await _dbContext.SaveChangesAsync();
+                }
+            }
 
             // Update the Lobby group
             await NotifyLobbyOfRoomUpdate(roomId);
