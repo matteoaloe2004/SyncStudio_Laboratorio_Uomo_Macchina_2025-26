@@ -35,34 +35,51 @@ L’obiettivo è offrire un’esperienza fluida, reattiva e altamente coinvolgen
 
 ## Architettura del Sistema (Mermaid)
 ```mermaid
-flowchart TD
-    subgraph Browser
-        UI["Interfaccia Utente (Vue.js + Bootstrap)"]
-        Dashboard["Dashboard Utente"]
-        Explore["Sezione \"Esplora Appunti\""]
-        Room["Stanza Studio (Widget Fluttuante)"]
+graph TD
+    subgraph Browser [Layer Client - Browser]
+        UI[Interfaccia Utente centralizzata<br/>Vue.js + HTML5]
+        
+        Dash(Dashboard Utente)
+        Esp(Sezione Esplora Appunti)
+        Stanza(Stanza Studio<br/>Widget Fluttuante)
+        
+        UI --- Dash
+        UI --- Esp
+        UI --- Stanza
     end
-    subgraph Server
-        MVC["ASP.NET Core MVC"]
-        Hub["SignalR Hub (TemplateHub)"]
-        EF["Entity Framework Core"]
-        DB[("Database SQL")]
+
+    subgraph Server [Layer Server - ASP.NET Core]
+        MVC[ASP.NET Core MVC<br/>Controllers & APIs]
+        Hub[SignalR Hub<br/>TemplateHub]
+        EF[Entity Framework Core]
     end
+
+    subgraph Database [Layer Persistenza]
+        DB[(Database MySQL)]
+    end
+
+    %% Relazioni Client -> Server
+    Dash -->|Richieste API / Dati statistici| MVC
+    Esp -->|Filtri & ricerca| MVC
+    Stanza -->|Timer, chat, conteggio utenti| Hub
     
-    UI -->|"Richieste API"| MVC
-    MVC -->|"Query/Comandi"| EF
-    EF -->|"Persist/Recupera"| DB
+    %% Relazioni Bidirezionali e Broadcast
+    UI <-->|Connessione WebSocket| Hub
+    Hub -.->|Broadcast Live| Stanza
+
+    %% Relazioni Server -> Database
+    MVC -->|Query / Comandi| EF
+    Hub -->|Aggiorna stato sessione| EF
+    EF <-->|Persiste / Recupera Dati| DB
+
+    %% Stili personalizzati per migliorare la resa visiva
+    classDef browserLayer fill:#2c3e50,stroke:#34495e,stroke-width:2px,color:#ecf0f1;
+    classDef serverLayer fill:#16a085,stroke:#1abc9c,stroke-width:2px,color:#fff;
+    classDef dbLayer fill:#c0392b,stroke:#e74c3c,stroke-width:2px,color:#fff;
     
-    UI -->|"WebSocket"| Hub
-    Hub -->|"Broadcast"| UI
-    Hub -->|"Aggiorna"| EF
-    
-    Dashboard -->|"Dati statistici"| MVC
-    Explore -->|"Filtri & ricerca"| MVC
-    Room -->|"Timer, chat, conteggio utenti"| Hub
-    
-    classDef external fill:#000000,stroke:#333,stroke-width:2px;
-    class UI,Dashboard,Explore,Room,MVC,Hub,EF,DB external;
+    class UI,Dash,Esp,Stanza browserLayer;
+    class MVC,Hub,EF serverLayer;
+    class DB dbLayer;
 ```
 
 ---
