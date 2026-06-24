@@ -152,7 +152,7 @@ namespace Template.Web.Features.StanzeStudio
         }
 
         [HttpPost]
-        public async virtual Task<IActionResult> Create(string name, Guid corsoId, int durationMinutes, int maxCapacity, string password, string description)
+        public async virtual Task<IActionResult> Create(string name, Guid corsoId, int durationMinutes, int maxCapacity, string password, string description, DateTime? dataApertura)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -179,11 +179,18 @@ namespace Template.Web.Features.StanzeStudio
                 CorsoId = corsoId,
                 MaxCapacity = maxCapacity,
                 Password = string.IsNullOrWhiteSpace(password) ? null : password.Trim(),
-                Descrizione = string.IsNullOrWhiteSpace(description) ? null : description.Trim()
+                Descrizione = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+                DataApertura = dataApertura
             };
 
             _dbContext.StanzeStudio.Add(newStanza);
             await _dbContext.SaveChangesAsync();
+
+            if (newStanza.DataApertura.HasValue && newStanza.DataApertura.Value > DateTime.Now)
+            {
+                TempData["SuccessMessage"] = $"Stanza '{name}' pianificata con successo per il {newStanza.DataApertura.Value:dd/MM/yyyy} alle {newStanza.DataApertura.Value:HH:mm}!";
+                return RedirectToAction(nameof(Index));
+            }
 
             TempData["SuccessMessage"] = $"Stanza '{name}' creata con successo!";
             // If private, redirect with pwd so creator can enter

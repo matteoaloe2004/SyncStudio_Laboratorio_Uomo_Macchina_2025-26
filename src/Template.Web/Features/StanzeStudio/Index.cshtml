@@ -192,6 +192,18 @@
                     </div>
                     <div class="mb-3">
                         <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="isPlannedCheck" onchange="document.getElementById('openingDateTimeField').style.display = this.checked ? 'block' : 'none'; if (this.checked) { document.getElementById('openingDateTimeInput').setAttribute('required', 'required'); document.getElementById('btnSubmitRoom').innerText = 'Pianifica Stanza'; } else { document.getElementById('openingDateTimeInput').removeAttribute('required'); document.getElementById('btnSubmitRoom').innerText = 'Crea ed Entra'; }">
+                            <label class="form-check-label fw-semibold small text-dark" for="isPlannedCheck">
+                                <i class="fa-regular fa-calendar-plus me-1 text-primary"></i> Pianifica stanza per il futuro
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mb-3" id="openingDateTimeField" style="display:none;">
+                        <label for="openingDateTimeInput" class="form-label fw-semibold small text-dark">Data e Ora di Apertura</label>
+                        <input type="datetime-local" class="form-control rounded-3" id="openingDateTimeInput" name="dataApertura" />
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="isPrivateCheck" onchange="document.getElementById('passwordField').style.display = this.checked ? 'block' : 'none';">
                             <label class="form-check-label fw-semibold small text-dark" for="isPrivateCheck">
                                 <i class="fa-solid fa-lock me-1 text-warning"></i> Stanza Privata (protetta da password)
@@ -205,7 +217,7 @@
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Annulla</button>
-                    <button type="submit" class="btn btn-primary rounded-3 px-4">Crea ed Entra</button>
+                    <button type="submit" id="btnSubmitRoom" class="btn btn-primary rounded-3 px-4">Crea ed Entra</button>
                 </div>
             </form>
         </div>
