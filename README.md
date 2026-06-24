@@ -37,29 +37,29 @@ L’obiettivo è offrire un’esperienza fluida, reattiva e altamente coinvolgen
 ```mermaid
 flowchart TD
     subgraph Browser
-        UI[Interfaccia Utente (Vue.js + Bootstrap)]
-        Dashboard[Dashboard Utente]
-        Explore[Sezione "Esplora Appunti"]
-        Room[Stanza Studio (Widget Fluttuante)]
+        UI["Interfaccia Utente (Vue.js + Bootstrap)"]
+        Dashboard["Dashboard Utente"]
+        Explore["Sezione \"Esplora Appunti\""]
+        Room["Stanza Studio (Widget Fluttuante)"]
     end
     subgraph Server
-        MVC[ASP.NET Core MVC]
-        Hub[SignalR Hub (TemplateHub)]
-        EF[Entity Framework Core]
-        DB[(Database SQL)]
+        MVC["ASP.NET Core MVC"]
+        Hub["SignalR Hub (TemplateHub)"]
+        EF["Entity Framework Core"]
+        DB[("Database SQL")]
     end
     
-    UI -->|Richieste API| MVC
-    MVC -->|Query/Comandi| EF
-    EF -->|Persist/Recupera| DB
+    UI -->|"Richieste API"| MVC
+    MVC -->|"Query/Comandi"| EF
+    EF -->|"Persist/Recupera"| DB
     
-    UI -->|WebSocket| Hub
-    Hub -->|Broadcast| UI
-    Hub -->|Aggiorna| EF
+    UI -->|"WebSocket"| Hub
+    Hub -->|"Broadcast"| UI
+    Hub -->|"Aggiorna"| EF
     
-    Dashboard -->|Dati statistici| MVC
-    Explore -->|Filtri & ricerca| MVC
-    Room -->|Timer, chat, conteggio utenti| Hub
+    Dashboard -->|"Dati statistici"| MVC
+    Explore -->|"Filtri & ricerca"| MVC
+    Room -->|"Timer, chat, conteggio utenti"| Hub
     
     classDef external fill:#f9f,stroke:#333,stroke-width:2px;
     class UI,Dashboard,Explore,Room external;
@@ -89,14 +89,4 @@ Il frontend Vue.js è integrato direttamente nelle view Razor; non è necessario
 - **Dashboard Utente**: grafici interattivi (es. giorni consecutivi di studio), statistiche personalizzate.
 - **Gestione Utenti & Dati**: registrazione, login, persistenza di corsi, appunti e sessioni.
 
----
 
-## Contribuire
-1. Forkare il repository.
-2. Creare un nuovo branch per la feature o il bugfix.
-3. Aprire una Pull Request descrivendo le modifiche.
-
----
-
-## Licenza
-Questo progetto è rilasciato sotto licenza MIT.
