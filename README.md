@@ -61,7 +61,7 @@ flowchart TD
     Explore -->|"Filtri & ricerca"| MVC
     Room -->|"Timer, chat, conteggio utenti"| Hub
     
-    classDef external fill:#f9f,stroke:#333,stroke-width:2px;
+    classDef external fill:#e0e0e0,stroke:#333,stroke-width:2px;
     class UI,Dashboard,Explore,Room external;
 ```
 
