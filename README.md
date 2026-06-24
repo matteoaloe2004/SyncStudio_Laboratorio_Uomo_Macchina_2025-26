@@ -62,7 +62,7 @@ flowchart TD
     Room -->|"Timer, chat, conteggio utenti"| Hub
     
     classDef external fill:#e0e0e0,stroke:#333,stroke-width:2px;
-    class UI,Dashboard,Explore,Room external;
+    class UI,Dashboard,Explore,Room,MVC,Hub,EF,DB external;
 ```
 
 ---
