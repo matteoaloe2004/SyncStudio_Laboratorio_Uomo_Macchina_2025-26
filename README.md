@@ -16,8 +16,10 @@
 ## Idea generale del progetto
 StudySync è una piattaforma web pensata per facilitare lo studio collaborativo tra studenti universitari. L’applicazione consente di:
 - Condividere appunti e risorse didattiche
+- Gestire domande e risposte (Q&A) sui materiali condivisi con chiara distinzione tra autore e studenti
 - Creare *Stanze Studio* in tempo reale con chat, timer Pomodoro sincronizzato e conteggio partecipanti
-- Esplorare appunti con filtri dinamici e ricerca immediata grazie a Vue.js
+- Pianificare stanze future e prenotare i posti ricevendo notifiche automatiche prima dell'evento
+- Pianificare il proprio calendario esami e organizzare sessioni di ripasso correlate
 - Visualizzare statistiche personali mediante dashboard interattive
 
 L’obiettivo è offrire un’esperienza fluida, reattiva e altamente coinvolgente, superando il classico approccio CRUD.
@@ -25,11 +27,11 @@ L’obiettivo è offrire un’esperienza fluida, reattiva e altamente coinvolgen
 ---
 
 ## Tecnologie principali
-- **ASP.NET Core MVC** – Backend e gestione delle pagine server‑side.
-- **Entity Framework Core** – ORM per persistenza di utenti, corsi, appunti e sessioni.
-- **SignalR** – Comunicazione in tempo reale per le *Stanze Studio* (chat, timer, conteggio utenti).
-- **Vue.js** – Frontend reattivo per filtri, ricerca e interfaccia dinamica.
-- **Bootstrap + CSS personalizzato** – Styling moderno, responsivo e accessibile.
+- **ASP.NET Core MVC** – Backend, gestione delle pagine server‑side ed API REST.
+- **Entity Framework Core** – ORM per persistenza di utenti, corsi, appunti, notifiche, prenotazioni e sessioni.
+- **SignalR** – Comunicazione bidirezionale in tempo reale per le *Stanze Studio* (chat, timer, utenti) e notifiche push globali.
+- **Vue.js** – Frontend reattivo per filtri, ricerca, gestione stati locali e notifiche.
+- **Bootstrap + CSS personalizzato** – Styling moderno, responsivo, curato e accessibile.
 
 ---
 
@@ -40,18 +42,21 @@ graph TD
         UI[Interfaccia Utente centralizzata<br/>Vue.js + HTML5]
         
         Dash(Dashboard Utente)
-        Esp(Sezione Esplora Appunti)
-        Stanza(Stanza Studio<br/>Widget Fluttuante)
+        Esp(Sezione Esplora Appunti<br/>Thread Q&A con badge Autore)
+        Stanza(Stanza Studio & Lobby<br/>Pianificazione e Prenotazioni)
+        Notif(Campanella Notifiche<br/>Dropdown Persistente)
         
         UI --- Dash
         UI --- Esp
         UI --- Stanza
+        UI --- Notif
     end
 
     subgraph Server [Layer Server - ASP.NET Core]
         MVC[ASP.NET Core MVC<br/>Controllers & APIs]
         Hub[SignalR Hub<br/>TemplateHub]
         EF[Entity Framework Core]
+        Worker[Background Worker<br/>EsameDeadlineWorker]
     end
 
     subgraph Database [Layer Persistenza]
@@ -60,16 +65,20 @@ graph TD
 
     %% Relazioni Client -> Server
     Dash -->|Richieste API / Dati statistici| MVC
-    Esp -->|Filtri & ricerca| MVC
-    Stanza -->|Timer, chat, conteggio utenti| Hub
+    Esp -->|Filtri, ricerca e commenti| MVC
+    Stanza -->|Timer, chat, prenotazioni| Hub
+    Notif -->|Segna come lette/cancellate| MVC
     
     %% Relazioni Bidirezionali e Broadcast
     UI <-->|Connessione WebSocket| Hub
-    Hub -.->|Broadcast Live| Stanza
+    Hub -.->|Broadcast Live / Notifiche Push| Stanza
+    Hub -.->|Notifiche Real-time| Notif
 
     %% Relazioni Server -> Database
     MVC -->|Query / Comandi| EF
-    Hub -->|Aggiorna stato sessione| EF
+    Hub -->|Aggiorna stato sessione / Notifiche| EF
+    Worker -->|Controlla scadenze e invia notifiche| EF
+    Worker -->|Invia notifiche tramite Hub| Hub
     EF <-->|Persiste / Recupera Dati| DB
 
     %% Stili personalizzati per migliorare la resa visiva
@@ -77,8 +86,8 @@ graph TD
     classDef serverLayer fill:#16a085,stroke:#1abc9c,stroke-width:2px,color:#fff;
     classDef dbLayer fill:#c0392b,stroke:#e74c3c,stroke-width:2px,color:#fff;
     
-    class UI,Dash,Esp,Stanza browserLayer;
-    class MVC,Hub,EF serverLayer;
+    class UI,Dash,Esp,Stanza,Notif browserLayer;
+    class MVC,Hub,EF,Worker serverLayer;
     class DB dbLayer;
 ```
 
@@ -101,9 +110,9 @@ Il frontend Vue.js è integrato direttamente nelle view Razor; non è necessario
 ---
 
 ## Funzionalità chiave
-- **Stanze Studio Collaborative**: chat in tempo reale, timer Pomodoro sincronizzato, widget fluttuante per sessioni attive in background.
-- **Esplora Appunti**: filtri per corso e tag, ricerca full‑text, aggiornamento istantaneo dei risultati.
-- **Dashboard Utente**: grafici interattivi (es. giorni consecutivi di studio), statistiche personalizzate.
-- **Gestione Utenti & Dati**: registrazione, login, persistenza di corsi, appunti e sessioni.
-
-
+- **Stanze Studio Collaborative**: chat in tempo reale, timer Pomodoro sincronizzato, pianificazione di stanze future e sistema di prenotazione/booking con aggiornamento automatico dei partecipanti.
+- **Esplora Appunti**: filtri per corso e tag, ricerca full‑text, download di materiale e sezione **Domande e Annotazioni (Q&A)** con evidenziazione grafica e badge dedicati per l'**Autore** e per le **Domande** degli altri utenti.
+- **Pianificazione Esami**: un planner completo per organizzare gli esami imminenti con indicatori di priorità basati sulla vicinanza temporale e pianificazione di sessioni di ripasso mirate.
+- **Sistema di Notifiche Real-time**: icona a campanella interattiva e persistente (con stato gestito in Vue per evitare conflitti) che aggiorna l'utente in tempo reale tramite SignalR per nuovi commenti sui propri appunti o promemoria delle stanze prenotate (1 giorno prima e all'avvio).
+- **Dashboard Utente**: grafici interattivi e statistiche personalizzate sull'andamento delle ore di studio e degli esami superati.
+- **Gestione Utenti**: sistema completo di registrazione, login e profili utente.
