@@ -35,10 +35,11 @@ namespace Template.Web.Features.Esami
                 try
                 {
                     await ControllaScadenzeEsami();
+                    await ControllaStanzePrenotate();
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Errore durante il controllo scadenze esami nel Background Service.");
+                    _logger.LogError(ex, "Errore durante il controllo del Background Service.");
                 }
 
                 await Task.Delay(_checkInterval, stoppingToken);
@@ -93,6 +94,82 @@ namespace Template.Web.Features.Esami
 
                         // 2. Publish via SignalR
                         await hubContext.Clients.User(exam.UserId.ToString()).ReceiveNotification(msgText);
+                    }
+                }
+            }
+        }
+
+        private async Task ControllaStanzePrenotate()
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<TemplateDbContext>();
+                var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<TemplateHub, ITemplateClientEvent>>();
+
+                var now = DateTime.Now;
+
+                var bookings = await dbContext.PrenotazioniStanze
+                    .Include(p => p.StanzaStudio)
+                    .Where(p => p.StanzaStudio.DataApertura != null)
+                    .ToListAsync();
+
+                foreach (var booking in bookings)
+                {
+                    var room = booking.StanzaStudio;
+                    var timeDiff = room.DataApertura.Value - now;
+
+                    // 1. Check if 1-day warning is applicable (less than 24 hours)
+                    if (timeDiff.TotalHours > 0 && timeDiff.TotalHours <= 24)
+                    {
+                        var alreadyNotified = await dbContext.Notifiche
+                            .AnyAsync(n => n.UserId == booking.UserId && 
+                                           n.ElementoCorrelatoId == room.Id && 
+                                           n.Messaggio.Contains("si aprirà domani"));
+
+                        if (!alreadyNotified)
+                        {
+                            string msgText = $"La stanza di ripasso '{room.Nome}' si aprirà domani alle {room.DataApertura.Value:HH:mm}!";
+                            
+                            var notifica = new Notifica
+                            {
+                                UserId = booking.UserId,
+                                Messaggio = msgText,
+                                DataCreazione = DateTime.Now,
+                                Letta = false,
+                                ElementoCorrelatoId = room.Id
+                            };
+                            dbContext.Notifiche.Add(notifica);
+                            await dbContext.SaveChangesAsync();
+
+                            await hubContext.Clients.User(booking.UserId.ToString()).ReceiveNotification(msgText);
+                        }
+                    }
+
+                    // 2. Check if starting now
+                    if (timeDiff.TotalMinutes >= -10 && timeDiff.TotalMinutes <= 5)
+                    {
+                        var alreadyNotified = await dbContext.Notifiche
+                            .AnyAsync(n => n.UserId == booking.UserId && 
+                                           n.ElementoCorrelatoId == room.Id && 
+                                           n.Messaggio.Contains("aperta adesso"));
+
+                        if (!alreadyNotified)
+                        {
+                            string msgText = $"La stanza di ripasso '{room.Nome}' è aperta adesso! Entra a studiare.";
+
+                            var notifica = new Notifica
+                            {
+                                UserId = booking.UserId,
+                                Messaggio = msgText,
+                                DataCreazione = DateTime.Now,
+                                Letta = false,
+                                ElementoCorrelatoId = room.Id
+                            };
+                            dbContext.Notifiche.Add(notifica);
+                            await dbContext.SaveChangesAsync();
+
+                            await hubContext.Clients.User(booking.UserId.ToString()).ReceiveNotification(msgText);
+                        }
                     }
                 }
             }

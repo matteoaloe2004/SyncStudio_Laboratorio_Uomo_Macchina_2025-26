@@ -21,6 +21,8 @@ namespace Template.Services.Shared
         public bool IsPrivate { get; set; }
         public string Descrizione { get; set; }
         public System.DateTime? DataApertura { get; set; }
+        public int BookingCount { get; set; }
+        public bool IsUserBooked { get; set; }
     }
 
     public partial class SharedService

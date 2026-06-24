@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Template.Services;
 using Template.Services.Shared;
@@ -49,6 +50,9 @@ namespace Template.Web.Features.StanzeStudio
             var stanze = await _sharedService.Query(new StanzeStudioAllQuery());
             var corsi = await _sharedService.Query(new CorsiAllQuery());
 
+            var userIdString = HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            Guid.TryParse(userIdString, out Guid userId);
+
             // Simple filtering logic if parameters are provided
             var filteredStanze = new List<StanzaStudioDTO>();
             foreach (var s in stanze)
@@ -58,6 +62,11 @@ namespace Template.Web.Features.StanzeStudio
                 s.OnlineCount = state.Participants.Count;
                 s.TempoRimanente = TimeSpan.FromSeconds(state.RemainingSeconds);
                 s.IsInEsecuzione = state.IsTimerRunning;
+
+                // Sync booking info
+                var bookings = await _dbContext.PrenotazioniStanze.Where(p => p.StanzaStudioId == s.Id).ToListAsync();
+                s.BookingCount = bookings.Count;
+                s.IsUserBooked = userId != Guid.Empty && bookings.Any(p => p.UserId == userId);
 
                 bool matchSearch = string.IsNullOrEmpty(searchTerm) || 
                                    s.Nome.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
@@ -183,6 +192,49 @@ namespace Template.Web.Features.StanzeStudio
                 return RedirectToAction(nameof(Room), new { id = newStanza.Id, pwd = newStanza.Password });
             }
             return RedirectToAction(nameof(Room), new { id = newStanza.Id });
+        }
+
+        [HttpPost]
+        public async virtual Task<IActionResult> PrenotaStanza(Guid roomId)
+        {
+            var userIdString = HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+            {
+                return Challenge();
+            }
+
+            var stanza = await _dbContext.StanzeStudio.FirstOrDefaultAsync(s => s.Id == roomId);
+            if (stanza == null)
+            {
+                return Json(new { success = false, message = "Stanza non trovata." });
+            }
+
+            var existingBooking = await _dbContext.PrenotazioniStanze
+                .FirstOrDefaultAsync(p => p.StanzaStudioId == roomId && p.UserId == userId);
+
+            bool isBookedNow = false;
+            if (existingBooking != null)
+            {
+                _dbContext.PrenotazioniStanze.Remove(existingBooking);
+                isBookedNow = false;
+            }
+            else
+            {
+                var booking = new PrenotazioneStanza
+                {
+                    StanzaStudioId = roomId,
+                    UserId = userId,
+                    DataPrenotazione = DateTime.UtcNow
+                };
+                _dbContext.PrenotazioniStanze.Add(booking);
+                isBookedNow = true;
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            var count = await _dbContext.PrenotazioniStanze.CountAsync(p => p.StanzaStudioId == roomId);
+
+            return Json(new { success = true, isBooked = isBookedNow, bookingCount = count });
         }
     }
 }

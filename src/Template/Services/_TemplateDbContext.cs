@@ -50,5 +50,6 @@ namespace Template.Services
         public DbSet<SessioneRipasso> SessioniRipasso { get; set; }
         public DbSet<CommentoAppunto> CommentiAppunti { get; set; }
         public DbSet<Notifica> Notifiche { get; set; }
+        public DbSet<PrenotazioneStanza> PrenotazioniStanze { get; set; }
     }
 }

@@ -108,8 +108,14 @@
                 <div class="my-3 py-2 border-top border-bottom border-light">
                     <div class="row text-center">
                         <div class="col-6 border-end border-light">
-                            <span class="text-muted small d-block">Membri</span>
-                            <span class="fw-bold text-dark"><i class="fa-solid fa-users text-primary me-1"></i>{{ stanza.onlineCount }}/{{ stanza.maxCapacity }}</span>
+                            <template v-if="isFutureRoom(stanza)">
+                                <span class="text-muted small d-block">Prenotati</span>
+                                <span class="fw-bold text-info"><i class="fa-regular fa-bell text-info me-1"></i>{{ stanza.bookingCount }}</span>
+                            </template>
+                            <template v-else>
+                                <span class="text-muted small d-block">Membri</span>
+                                <span class="fw-bold text-dark"><i class="fa-solid fa-users text-primary me-1"></i>{{ stanza.onlineCount }}/{{ stanza.maxCapacity }}</span>
+                            </template>
                         </div>
                         <div class="col-6">
                             <template v-if="isFutureRoom(stanza)">
@@ -126,9 +132,16 @@
 
                 <!-- Footer / Actions -->
                 <div class="mt-auto pt-3">
-                    <button v-if="isFutureRoom(stanza)" type="button" disabled class="btn btn-outline-secondary w-100 rounded-3 fw-semibold d-flex align-items-center justify-content-center opacity-75" style="border-style: dashed;">
-                        <i class="fa-solid fa-hourglass-start me-2 text-info"></i>Si aprirà in futuro
-                    </button>
+                    <template v-if="isFutureRoom(stanza)">
+                        <button type="button" @@click="toggleBooking(stanza)" class="btn w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center transition-all" :class="stanza.isUserBooked ? 'btn-outline-danger' : 'btn-outline-primary'">
+                            <span v-if="stanza.isUserBooked">
+                                <i class="fa-solid fa-bell-slash me-2"></i>Annulla Prenotazione
+                            </span>
+                            <span v-else>
+                                <i class="fa-solid fa-bell me-2"></i>Prenotati alla sessione
+                            </span>
+                        </button>
+                    </template>
                     <button v-else type="button" @@click="enterRoom(stanza)" class="btn btn-primary w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center">
                         Entra nella Stanza <i class="fa-solid fa-right-to-bracket ms-2 fs-7"></i>
                     </button>
@@ -216,7 +229,9 @@
             isBreak = false,
             isPrivate = s.IsPrivate,
             descrizione = s.Descrizione,
-            dataApertura = s.DataApertura.HasValue ? s.DataApertura.Value.ToString("yyyy-MM-ddTHH:mm") : null
+            dataApertura = s.DataApertura.HasValue ? s.DataApertura.Value.ToString("yyyy-MM-ddTHH:mm") : null,
+            bookingCount = s.BookingCount,
+            isUserBooked = s.IsUserBooked
         })));
 
         new Vue({
@@ -267,7 +282,9 @@
                                 isTimerRunning: isRunning,
                                 isBreak: isBreak,
                                 descrizione: descrizione,
-                                dataApertura: dataApertura
+                                dataApertura: dataApertura,
+                                bookingCount: 0,
+                                isUserBooked: false
                             });
                         }
                     });
@@ -318,6 +335,37 @@
                     const hours = d.getHours().toString().padStart(2, '0');
                     const minutes = d.getMinutes().toString().padStart(2, '0');
                     return `${day} ${month} alle ${hours}:${minutes}`;
+                },
+                toggleBooking(stanza) {
+                    const formData = new FormData();
+                    formData.append('roomId', stanza.id);
+                    fetch('/StanzeStudio/PrenotaStanza', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            stanza.isUserBooked = data.isBooked;
+                            stanza.bookingCount = data.bookingCount;
+                            
+                            Toastify({
+                                text: data.isBooked ? "Ti sei prenotato con successo a questa sessione di studio!" : "Prenotazione annullata.",
+                                duration: 3000,
+                                gravity: "bottom",
+                                position: "center",
+                                style: {
+                                    background: data.isBooked ? "linear-gradient(to right, #00b09b, #96c93d)" : "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                    borderRadius: "8px"
+                                }
+                            }).showToast();
+                        } else {
+                            alert(data.message || "Errore durante la prenotazione.");
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error toggling booking:", err);
+                    });
                 }
             },
             mounted() {
