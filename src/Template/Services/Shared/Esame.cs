@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Template.Services.Shared
 {
-    public class StanzaStudio
+    public class Esame
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -13,10 +14,8 @@ namespace Template.Services.Shared
         [Required]
         public string Nome { get; set; }
 
-        public TimeSpan TempoRimanente { get; set; }
-
         [Required]
-        public bool IsInEsecuzione { get; set; }
+        public DateTime DueDate { get; set; }
 
         [Required]
         [ForeignKey("Corso")]
@@ -24,15 +23,12 @@ namespace Template.Services.Shared
 
         public Corso Corso { get; set; }
 
-        public int MaxCapacity { get; set; } = 8;
+        [Required]
+        [ForeignKey("User")]
+        public Guid UserId { get; set; }
 
-        public string Password { get; set; }
+        public User User { get; set; }
 
-        public string Descrizione { get; set; }
-
-        public DateTime? DataApertura { get; set; }
-
-        [NotMapped]
-        public bool IsPrivate => !string.IsNullOrEmpty(Password);
+        public ICollection<SessioneRipasso> SessioniRipasso { get; set; } = new List<SessioneRipasso>();
     }
 }

@@ -79,6 +79,7 @@ namespace Template.Web
 
             services.AddSignalR();
             Container.RegisterTypes(services);
+            services.AddHostedService<Template.Web.Features.Esami.EsameDeadlineWorker>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -131,6 +132,8 @@ namespace Template.Web
                 endpoints.MapAreaControllerRoute("Example", "Example", "Example/{controller=Users}/{action=Index}/{id?}");
                 endpoints.MapControllerRoute("appunti", "Appunti", new { controller = "Appunti", action = "Index" });
                 endpoints.MapControllerRoute("corsi", "Corsi", new { controller = "Corsi", action = "Index" });
+                endpoints.MapControllerRoute("esami", "Esami", new { controller = "Esami", action = "Index" });
+                endpoints.MapControllerRoute("notifiche", "Notifiche", new { controller = "Notifiche", action = "Index" });
                 endpoints.MapControllerRoute("stanzeStudioRoom", "StanzeStudio/Room/{id}", new { controller = "StanzeStudio", action = "Room" });
                 endpoints.MapControllerRoute("stanzeStudio", "StanzeStudio", new { controller = "StanzeStudio", action = "Index" });
                 endpoints.MapControllerRoute("default", "{controller=Login}/{action=Login}/{id?}");

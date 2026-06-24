@@ -273,6 +273,9 @@
                         <li class="nav-item">
                             <a class="nav-link px-3 py-1.5 rounded-pill fw-semibold text-secondary hover-primary-text @(activeCtrl == "StanzeStudio" ? "active-pill" : "")" href="/StanzeStudio">Le mie Stanze</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link px-3 py-1.5 rounded-pill fw-semibold text-secondary hover-primary-text @(activeCtrl == "Esami" ? "active-pill" : "")" href="/Esami">Pianificazione</a>
+                        </li>
                     </ul>
 
                     <!-- User Profile Dropdown -->
@@ -484,6 +487,78 @@
                             }
                         }, 1000);
                     }
+                }
+            });
+        })();
+    </script>
+
+    <script type="text/javascript">
+        (function () {
+            document.addEventListener("DOMContentLoaded", function () {
+                const isLoggedIn = @(identitaCorrente != null ? "true" : "false");
+                if (!isLoggedIn) return;
+
+                if (typeof signalR !== 'undefined') {
+                    const connection = new signalR.HubConnectionBuilder()
+                        .withUrl("/templateHub")
+                        .build();
+
+                    window.appHubConnection = connection;
+
+                    connection.on("ReceiveNotification", function(message) {
+                        Toastify({
+                            text: message,
+                            duration: 7000,
+                            gravity: "top",
+                            position: "right",
+                            close: true,
+                            style: {
+                                background: "linear-gradient(to right, #ea580c, #f97316)",
+                                borderRadius: "10px",
+                                padding: "12px 20px",
+                                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)"
+                            }
+                        }).showToast();
+                    });
+
+                    connection.start()
+                        .then(() => {
+                            console.log("Global SignalR Connection established.");
+                        })
+                        .catch(err => console.error("Error starting global SignalR connection:", err));
+
+                    // Fetch unread notifications on page load
+                    fetch('/Notifiche/GetUnreadNotifiche')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success && data.notifiche.length > 0) {
+                                data.notifiche.forEach((n, idx) => {
+                                    setTimeout(() => {
+                                        Toastify({
+                                            text: n.messaggio,
+                                            duration: 8000,
+                                            gravity: "top",
+                                            position: "right",
+                                            close: true,
+                                            style: {
+                                                background: "linear-gradient(to right, #ea580c, #f97316)",
+                                                borderRadius: "10px",
+                                                padding: "12px 20px"
+                                            }
+                                        }).showToast();
+                                        
+                                        // Mark as read
+                                        const formData = new FormData();
+                                        formData.append('id', n.id);
+                                        fetch('/Notifiche/MarkAsRead', { 
+                                            method: 'POST',
+                                            body: formData
+                                        });
+                                    }, idx * 1200);
+                                });
+                            }
+                        })
+                        .catch(err => console.error("Error fetching initial notifications:", err));
                 }
             });
         })();

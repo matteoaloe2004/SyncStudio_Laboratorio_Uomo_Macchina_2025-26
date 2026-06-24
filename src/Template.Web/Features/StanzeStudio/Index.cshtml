@@ -80,7 +80,9 @@
     </div>
     <div v-else class="row g-4">
         <div v-for="stanza in filteredStanze" :key="stanza.id" class="col-md-6 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white p-4 d-flex flex-column position-relative transition-all hover-translate-y">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden p-4 d-flex flex-column position-relative transition-all hover-translate-y"
+                 :class="isFutureRoom(stanza) ? 'bg-future-room' : 'bg-white'"
+                 :style="isFutureRoom(stanza) ? 'border: 1px dashed #cbd5e1; background-color: #fafafc;' : ''">
                 <!-- Upper Section -->
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
@@ -89,7 +91,10 @@
                             <i v-if="stanza.isPrivate" class="fa-solid fa-lock text-warning me-1 fs-7" title="Stanza privata"></i>{{ stanza.nome }}
                         </h5>
                     </div>
-                    <span class="badge rounded-pill px-2.5 py-1 fs-9 fw-semibold" :class="stanza.isTimerRunning ? 'bg-success-light text-success' : 'bg-warning-light text-warning'">
+                    <span v-if="isFutureRoom(stanza)" class="badge bg-info-light text-info rounded-pill px-2.5 py-1 fs-9 fw-semibold">
+                        <i class="fa-regular fa-calendar me-1"></i>Pianificata
+                    </span>
+                    <span v-else class="badge rounded-pill px-2.5 py-1 fs-9 fw-semibold" :class="stanza.isTimerRunning ? 'bg-success-light text-success' : 'bg-warning-light text-warning'">
                         <i class="fa-solid fa-circle me-1 fs-10"></i>{{ stanza.isTimerRunning ? (stanza.isBreak ? 'Pausa' : 'Studio') : 'In Pausa' }}
                     </span>
                 </div>
@@ -107,15 +112,24 @@
                             <span class="fw-bold text-dark"><i class="fa-solid fa-users text-primary me-1"></i>{{ stanza.onlineCount }}/{{ stanza.maxCapacity }}</span>
                         </div>
                         <div class="col-6">
-                            <span class="text-muted small d-block">Pomodoro</span>
-                            <span class="fw-bold text-dark"><i class="fa-regular fa-clock text-warning me-1"></i>{{ formatTime(stanza.remainingSeconds) }}</span>
+                            <template v-if="isFutureRoom(stanza)">
+                                <span class="text-muted small d-block">Apertura</span>
+                                <span class="fw-semibold text-secondary" style="font-size: 0.8rem;"><i class="fa-solid fa-clock text-info me-1"></i>{{ getFormattedOpeningDate(stanza.dataApertura) }}</span>
+                            </template>
+                            <template v-else>
+                                <span class="text-muted small d-block">Pomodoro</span>
+                                <span class="fw-bold text-dark"><i class="fa-regular fa-clock text-warning me-1"></i>{{ formatTime(stanza.remainingSeconds) }}</span>
+                            </template>
                         </div>
                     </div>
                 </div>
 
                 <!-- Footer / Actions -->
                 <div class="mt-auto pt-3">
-                    <button type="button" @@click="enterRoom(stanza)" class="btn btn-primary w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center">
+                    <button v-if="isFutureRoom(stanza)" type="button" disabled class="btn btn-outline-secondary w-100 rounded-3 fw-semibold d-flex align-items-center justify-content-center opacity-75" style="border-style: dashed;">
+                        <i class="fa-solid fa-hourglass-start me-2 text-info"></i>Si aprirà in futuro
+                    </button>
+                    <button v-else type="button" @@click="enterRoom(stanza)" class="btn btn-primary w-100 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center">
                         Entra nella Stanza <i class="fa-solid fa-right-to-bracket ms-2 fs-7"></i>
                     </button>
                 </div>
@@ -201,7 +215,8 @@
             isTimerRunning = s.IsInEsecuzione,
             isBreak = false,
             isPrivate = s.IsPrivate,
-            descrizione = s.Descrizione
+            descrizione = s.Descrizione,
+            dataApertura = s.DataApertura.HasValue ? s.DataApertura.Value.ToString("yyyy-MM-ddTHH:mm") : null
         })));
 
         new Vue({
@@ -231,7 +246,7 @@
                         .configureLogging(signalR.LogLevel.Error)
                         .build();
 
-                    this.connection.on('LobbyRoomUpdated', (roomId, nome, corsoNome, corsoId, onlineCount, remainingSeconds, isRunning, isBreak, descrizione) => {
+                    this.connection.on('LobbyRoomUpdated', (roomId, nome, corsoNome, corsoId, onlineCount, remainingSeconds, isRunning, isBreak, descrizione, dataApertura) => {
                         let room = this.stanze.find(s => s.id === roomId);
                         if (room) {
                             room.onlineCount = onlineCount;
@@ -239,6 +254,7 @@
                             room.isTimerRunning = isRunning;
                             room.isBreak = isBreak;
                             room.descrizione = descrizione;
+                            if (dataApertura) room.dataApertura = dataApertura;
                         } else {
                             this.stanze.push({
                                 id: roomId,
@@ -250,7 +266,8 @@
                                 remainingSeconds: remainingSeconds,
                                 isTimerRunning: isRunning,
                                 isBreak: isBreak,
-                                descrizione: descrizione
+                                descrizione: descrizione,
+                                dataApertura: dataApertura
                             });
                         }
                     });
@@ -287,6 +304,20 @@
                         const modal = new bootstrap.Modal(modalEl);
                         modal.show();
                     }
+                },
+                isFutureRoom(stanza) {
+                    if (!stanza.dataApertura) return false;
+                    return new Date(stanza.dataApertura) > new Date();
+                },
+                getFormattedOpeningDate(dateStr) {
+                    if (!dateStr) return '';
+                    const d = new Date(dateStr);
+                    const months = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+                    const day = d.getDate();
+                    const month = months[d.getMonth()];
+                    const hours = d.getHours().toString().padStart(2, '0');
+                    const minutes = d.getMinutes().toString().padStart(2, '0');
+                    return `${day} ${month} alle ${hours}:${minutes}`;
                 }
             },
             mounted() {

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using Template.Services;
 using Template.Services.Shared;
 using Template.Web.Areas;
+using Microsoft.AspNetCore.SignalR;
+using Template.Web.SignalR.Hubs;
+using Template.Web.Infrastructure;
 
 namespace Template.Web.Features.Appunti
 {
@@ -15,11 +18,13 @@ namespace Template.Web.Features.Appunti
     {
         private readonly TemplateDbContext _dbContext;
         private readonly AppuntoService _appuntoService;
+        private readonly IHubContext<TemplateHub, ITemplateClientEvent> _hubContext;
 
-        public AppuntiController(TemplateDbContext dbContext, AppuntoService appuntoService)
+        public AppuntiController(TemplateDbContext dbContext, AppuntoService appuntoService, IHubContext<TemplateHub, ITemplateClientEvent> hubContext)
         {
             _dbContext = dbContext;
             _appuntoService = appuntoService;
+            _hubContext = hubContext;
         }
 
         [HttpGet]
@@ -199,6 +204,111 @@ namespace Template.Web.Features.Appunti
             }
 
             return File(pdfBytes, "application/pdf", appunto.NomeFile);
+        }
+
+        [HttpGet]
+        public async virtual Task<IActionResult> GetComments(Guid appuntoId)
+        {
+            if (appuntoId == Guid.Empty)
+            {
+                return Json(new { success = false, message = "ID appunto non valido." });
+            }
+
+            var comments = await _dbContext.CommentiAppunti
+                .Include(c => c.User)
+                .Where(c => c.AppuntoId == appuntoId)
+                .OrderBy(c => c.Data)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var data = comments.Select(c => new {
+                Id = c.Id,
+                Testo = c.Testo,
+                Data = c.Data.ToString("dd/MM/yyyy HH:mm"),
+                AutoreNome = c.User.NickName ?? c.User.FirstName ?? "Studente",
+                AvatarUrl = c.User.Email.ToGravatarUrl()
+            }).ToList();
+
+            return Json(new { success = true, comments = data });
+        }
+
+        [HttpPost]
+        public async virtual Task<IActionResult> AddComment(Guid appuntoId, string testo)
+        {
+            if (appuntoId == Guid.Empty || string.IsNullOrWhiteSpace(testo))
+            {
+                return Json(new { success = false, message = "Dati del commento incompleti." });
+            }
+
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return Challenge();
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var currentUser = await _dbContext.Users.FindAsync(userId);
+            if (currentUser == null)
+            {
+                return Challenge();
+            }
+
+            var appunto = await _dbContext.Appunti
+                .Include(a => a.User)
+                .Include(a => a.Corso)
+                .FirstOrDefaultAsync(a => a.Id == appuntoId);
+
+            if (appunto == null)
+            {
+                return Json(new { success = false, message = "Appunto non trovato." });
+            }
+
+            var comment = new CommentoAppunto
+            {
+                Testo = testo.Trim(),
+                Data = DateTime.Now,
+                AppuntoId = appuntoId,
+                UserId = userId
+            };
+
+            _dbContext.CommentiAppunti.Add(comment);
+            await _dbContext.SaveChangesAsync();
+
+            var commenterName = currentUser.NickName ?? currentUser.FirstName ?? "Studente";
+            var result = new
+            {
+                Id = comment.Id,
+                Testo = comment.Testo,
+                Data = comment.Data.ToString("dd/MM/yyyy HH:mm"),
+                AutoreNome = commenterName,
+                AvatarUrl = currentUser.Email.ToGravatarUrl()
+            };
+
+            // Real-time update for anyone viewing the comments list for this notes file
+            await _hubContext.Clients.All.ReceiveCommentUpdate(appuntoId, result);
+
+            // Real-time notification for the creator of the notes (if commenting user is not the creator)
+            if (appunto.UserId != userId)
+            {
+                var notificationMessage = $"{commenterName} ha inserito un commento/domanda sui tuoi appunti '{appunto.Titolo}' di {appunto.Corso.Nome}!";
+                
+                // 1. Save notification in database
+                var notifica = new Notifica
+                {
+                    UserId = appunto.UserId,
+                    Messaggio = notificationMessage,
+                    DataCreazione = DateTime.Now,
+                    Letta = false,
+                    ElementoCorrelatoId = appuntoId
+                };
+                _dbContext.Notifiche.Add(notifica);
+                await _dbContext.SaveChangesAsync();
+
+                // 2. Dispatch live SignalR notification to the notes owner
+                await _hubContext.Clients.User(appunto.UserId.ToString()).ReceiveNotification(notificationMessage);
+            }
+
+            return Json(new { success = true, comment = result });
         }
     }
 }

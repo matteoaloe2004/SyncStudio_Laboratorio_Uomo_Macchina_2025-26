@@ -207,7 +207,7 @@
 
     <!-- Appunto Details Modal -->
     <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 rounded-4 shadow-lg" v-if="activeAppunto">
                 <div class="modal-header border-bottom-0 pb-0">
                     <span class="badge bg-primary-light text-primary px-3 py-1.5 rounded-pill fs-8 fw-bold">
@@ -216,46 +216,87 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body pt-3">
-                    <h4 class="fw-bold text-dark mb-2">{{ activeAppunto.titolo }}</h4>
-                    <div class="d-flex align-items-center gap-3 text-muted small mb-3">
-                        <span><i class="fa-solid fa-user me-1"></i>{{ activeAppunto.autoreNome }}</span>
-                        <span><i class="fa-regular fa-calendar me-1"></i>{{ activeAppunto.dataCaricamento }}</span>
-                    </div>
+                    <div class="row">
+                        <!-- Left Column: Details & Downloads -->
+                        <div class="col-md-6 border-end pr-md-4">
+                            <h4 class="fw-bold text-dark mb-2">{{ activeAppunto.titolo }}</h4>
+                            <div class="d-flex align-items-center gap-3 text-muted small mb-3">
+                                <span><i class="fa-solid fa-user me-1"></i>{{ activeAppunto.autoreNome }}</span>
+                                <span><i class="fa-regular fa-calendar me-1"></i>{{ activeAppunto.dataCaricamento }}</span>
+                            </div>
 
-                    <p class="text-secondary small mb-4">{{ activeAppunto.descrizione }}</p>
+                            <p class="text-secondary small mb-4">{{ activeAppunto.descrizione }}</p>
 
-                    <!-- Stats in Modal -->
-                    <div class="row text-center bg-light rounded-3 py-2.5 mb-4 mx-0">
-                        <div class="col-6 border-end">
-                            <span class="d-block text-secondary small">Downloads</span>
-                            <span class="fw-bold text-dark"><i class="fa-solid fa-download me-1"></i>{{ activeAppunto.downloads }}</span>
+                            <!-- Stats in Modal -->
+                            <div class="row text-center bg-light rounded-3 py-2.5 mb-4 mx-0">
+                                <div class="col-6 border-end">
+                                    <span class="d-block text-secondary small">Downloads</span>
+                                    <span class="fw-bold text-dark"><i class="fa-solid fa-download me-1"></i>{{ activeAppunto.downloads }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="d-block text-secondary small">Valutazione</span>
+                                    <span class="fw-bold text-warning"><i class="fa-solid fa-star me-1"></i>{{ activeAppunto.rating }} / 5.0</span>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Rating System -->
+                            <div class="text-center mb-4">
+                                <p class="small fw-semibold text-secondary mb-2">Lascia la tua valutazione</p>
+                                <div class="d-flex justify-content-center gap-1.5">
+                                    <i v-for="star in 5" 
+                                       :key="star" 
+                                       class="fa-solid fa-star rating-star" 
+                                       :class="{ 'active': star <= (userRating || activeAppunto.userVote) }"
+                                       @@click="submitRating(star)">
+                                    </i>
+                                </div>
+                                <p v-if="hasVoted[activeAppunto.id]" class="text-success small mt-2 fw-semibold">Valutazione registrata con successo!</p>
+                            </div>
+
+                            <!-- Download action -->
+                            <a :href="'/Appunti/Download/' + activeAppunto.id" 
+                               class="btn btn-primary w-100 btn-lg rounded-pill shadow-sm"
+                               @@click="incrementDownloads(activeAppunto)">
+                                <i class="fa-solid fa-download me-2"></i>Scarica Appunto (PDF)
+                            </a>
                         </div>
-                        <div class="col-6">
-                            <span class="d-block text-secondary small">Valutazione</span>
-                            <span class="fw-bold text-warning"><i class="fa-solid fa-star me-1"></i>{{ activeAppunto.rating }} / 5.0</span>
+
+                        <!-- Right Column: Comments & Questions -->
+                        <div class="col-md-6 pl-md-4 mt-4 mt-md-0 d-flex flex-column justify-content-between" style="max-height: 480px;">
+                            <div>
+                                <h5 class="fw-bold text-dark mb-3">
+                                    <i class="fa-solid fa-comments text-primary me-2"></i>Domande e Annotazioni
+                                </h5>
+                                
+                                <!-- Comments Scrollable Container -->
+                                <div class="comments-container overflow-y-auto mb-3" style="max-height: 280px; overflow-y: auto;">
+                                    <div v-if="comments.length === 0" class="text-center py-4 bg-light rounded-3">
+                                        <p class="text-muted small mb-0">Nessuna domanda ancora. Fai la prima domanda!</p>
+                                    </div>
+                                    <div v-else v-for="c in comments" :key="c.id" class="d-flex gap-2 mb-3 bg-light p-2.5 rounded-3">
+                                        <img :src="c.avatarUrl" class="rounded-circle border" style="width: 32px; height: 32px;" />
+                                        <div class="w-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="fw-bold text-dark small">{{ c.autoreNome }}</span>
+                                                <span class="text-muted fs-9">{{ c.data }}</span>
+                                            </div>
+                                            <p class="text-secondary small mb-0">{{ c.testo }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Add Comment Form -->
+                            <!form @@submit.prevent="submitComment" class="mt-2">
+                                <div class="input-group">
+                                    <textarea class="form-control rounded-start-3" rows="2" placeholder="Scrivi una domanda o un commento..." required v-model="newCommentText" style="font-size: 0.875rem; resize: none;"></textarea>
+                                    <button type="submit" class="btn btn-primary px-3 rounded-end-3" :disabled="!newCommentText.trim()">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </!form>
                         </div>
                     </div>
-
-                    <!-- Interactive Rating System -->
-                    <div class="text-center mb-4">
-                        <p class="small fw-semibold text-secondary mb-2">Lascia la tua valutazione</p>
-                        <div class="d-flex justify-content-center gap-1.5">
-                            <i v-for="star in 5" 
-                               :key="star" 
-                               class="fa-solid fa-star rating-star" 
-                               :class="{ 'active': star <= (userRating || activeAppunto.userVote) }"
-                               @@click="submitRating(star)">
-                            </i>
-                        </div>
-                        <p v-if="hasVoted[activeAppunto.id]" class="text-success small mt-2 fw-semibold">Valutazione registrata con successo!</p>
-                    </div>
-
-                    <!-- Download action -->
-                    <a :href="'/Appunti/Download/' + activeAppunto.id" 
-                       class="btn btn-primary w-100 btn-lg rounded-pill shadow-sm"
-                       @@click="incrementDownloads(activeAppunto)">
-                        <i class="fa-solid fa-download me-2"></i>Scarica Appunto (PDF)
-                    </a>
                 </div>
             </div>
         </div>
@@ -320,6 +361,8 @@
                 activeAppunto: null,
                 userRating: 0,
                 hasVoted: {},
+                comments: [],
+                newCommentText: '',
                 uploadForm: {
                     titolo: '',
                     descrizione: '',
@@ -388,6 +431,26 @@
                 if (corsoIdParam) {
                     this.selectedCorso = corsoIdParam;
                 }
+
+                // Bind SignalR event for comments
+                document.addEventListener("DOMContentLoaded", () => {
+                    if (window.appHubConnection) {
+                        window.appHubConnection.on("ReceiveCommentUpdate", (appuntoId, comment) => {
+                            if (this.activeAppunto && this.activeAppunto.id === appuntoId) {
+                                if (!this.comments.some(c => c.id === comment.id)) {
+                                    this.comments.push(comment);
+                                    // Scroll comments to bottom
+                                    this.$nextTick(() => {
+                                        const container = this.$el.querySelector('.comments-container');
+                                        if (container) {
+                                            container.scrollTop = container.scrollHeight;
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
             },
             methods: {
                 loadData() {
@@ -430,8 +493,54 @@
                 openDetails(a) {
                     this.activeAppunto = a;
                     this.userRating = 0;
+                    this.comments = [];
+                    this.newCommentText = '';
+
+                    fetch('/Appunti/GetComments?appuntoId=' + a.id)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                this.comments = data.comments;
+                                // Scroll comments to bottom
+                                this.$nextTick(() => {
+                                    const container = this.$el.querySelector('.comments-container');
+                                    if (container) {
+                                        container.scrollTop = container.scrollHeight;
+                                    }
+                                });
+                            }
+                        })
+                        .catch(err => console.error('Error loading comments:', err));
+
                     const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
                     modal.show();
+                },
+                submitComment() {
+                    if (!this.newCommentText.trim() || !this.activeAppunto) return;
+
+                    const formData = new FormData();
+                    formData.append('appuntoId', this.activeAppunto.id);
+                    formData.append('testo', this.newCommentText);
+
+                    fetch('/Appunti/AddComment', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.newCommentText = '';
+                        } else {
+                            Toastify({
+                                text: data.message || "Errore durante l'invio del commento",
+                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                duration: 3000
+                            }).showToast();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error adding comment:', err);
+                    });
                 },
                 submitRating(stars) {
                     if (this.hasVoted[this.activeAppunto.id]) return;

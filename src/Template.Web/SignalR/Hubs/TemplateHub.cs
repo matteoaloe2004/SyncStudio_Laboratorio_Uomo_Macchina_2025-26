@@ -18,7 +18,11 @@ namespace Template.Web.SignalR.Hubs
         Task ReceiveChatMessage(string userName, string text, string time);
         Task TimerUpdated(bool isRunning, int remainingSeconds, bool isBreak);
         Task TasksUpdated(System.Collections.Generic.List<RoomTask> tasks);
-        Task LobbyRoomUpdated(Guid roomId, string nome, string corsoNome, Guid corsoId, int onlineCount, int remainingSeconds, bool isRunning, bool isBreak, string descrizione);
+        Task LobbyRoomUpdated(Guid roomId, string nome, string corsoNome, Guid corsoId, int onlineCount, int remainingSeconds, bool isRunning, bool isBreak, string descrizione, string dataApertura);
+
+        // Collaborazione ed Esami Events
+        Task ReceiveNotification(string message);
+        Task ReceiveCommentUpdate(Guid appuntoId, object comment);
     }
 
     [Microsoft.AspNetCore.Authorization.Authorize]
@@ -72,7 +76,8 @@ namespace Template.Web.SignalR.Hubs
                     state.RemainingSeconds,
                     state.IsTimerRunning,
                     state.IsBreak,
-                    roomDb.Descrizione
+                    roomDb.Descrizione,
+                    roomDb.DataApertura.HasValue ? roomDb.DataApertura.Value.ToString("yyyy-MM-ddTHH:mm") : null
                 );
             }
         }

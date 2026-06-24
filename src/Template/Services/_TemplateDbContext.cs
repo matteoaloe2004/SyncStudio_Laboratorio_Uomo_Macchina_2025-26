@@ -1,4 +1,4 @@
-﻿using Template.Infrastructure;
+using Template.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Template.Infrastructure;
@@ -46,5 +46,9 @@ namespace Template.Services
         public DbSet<Corso> Corsi { get; set; }
         public DbSet<Appunto> Appunti { get; set; }
         public DbSet<StanzaStudio> StanzeStudio { get; set; }
+        public DbSet<Esame> Esami { get; set; }
+        public DbSet<SessioneRipasso> SessioniRipasso { get; set; }
+        public DbSet<CommentoAppunto> CommentiAppunti { get; set; }
+        public DbSet<Notifica> Notifiche { get; set; }
     }
 }

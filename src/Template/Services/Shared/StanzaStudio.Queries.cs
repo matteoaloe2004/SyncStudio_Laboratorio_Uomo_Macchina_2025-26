@@ -20,6 +20,7 @@ namespace Template.Services.Shared
         public int MaxCapacity { get; set; }
         public bool IsPrivate { get; set; }
         public string Descrizione { get; set; }
+        public System.DateTime? DataApertura { get; set; }
     }
 
     public partial class SharedService
@@ -45,7 +46,8 @@ namespace Template.Services.Shared
                     OnlineCount = 0,
                     MaxCapacity = s.MaxCapacity,
                     IsPrivate = s.IsPrivate,
-                    Descrizione = s.Descrizione
+                    Descrizione = s.Descrizione,
+                    DataApertura = s.DataApertura
                 });
             }
 

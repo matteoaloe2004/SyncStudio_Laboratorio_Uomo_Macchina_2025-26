@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Template.Services;
 
@@ -11,9 +12,11 @@ using Template.Services;
 namespace Template.Migrations
 {
     [DbContext(typeof(TemplateDbContext))]
-    partial class TemplateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260624135638_AddHciAdvancedFeatures")]
+    partial class AddHciAdvancedFeatures
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -190,9 +193,6 @@ namespace Template.Migrations
 
                     b.Property<Guid>("CorsoId")
                         .HasColumnType("char(36)");
-
-                    b.Property<DateTime?>("DataApertura")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Descrizione")
                         .HasColumnType("longtext");

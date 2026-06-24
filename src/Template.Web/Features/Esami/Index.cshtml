@@ -1,0 +1,990 @@
+@{
+    ViewData["Title"] = "Pianificazione";
+}
+@section styles {
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .dashboard-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.25rem;
+        }
+
+        .dashboard-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .stats-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stats-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* Summary Cards */
+        .summary-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.01);
+            transition: all 0.2s ease;
+        }
+
+        .summary-card-red {
+            background-color: #fef2f2;
+            border-color: #fee2e2;
+        }
+        .summary-card-red .icon-container {
+            background-color: #fee2e2;
+            color: #ef4444;
+        }
+        .summary-card-red .count-val {
+            color: #ef4444;
+        }
+
+        .summary-card-yellow {
+            background-color: #fffbeb;
+            border-color: #fef3c7;
+        }
+        .summary-card-yellow .icon-container {
+            background-color: #fef3c7;
+            color: #f59e0b;
+        }
+        .summary-card-yellow .count-val {
+            color: #f59e0b;
+        }
+
+        .summary-card-green {
+            background-color: #f0fdf4;
+            border-color: #dcfce7;
+        }
+        .summary-card-green .icon-container {
+            background-color: #dcfce7;
+            color: #10b981;
+        }
+        .summary-card-green .count-val {
+            color: #10b981;
+        }
+
+        .icon-container {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .count-val {
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .label-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        /* Section Rows */
+        .category-section {
+            margin-bottom: 2.25rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .badge-pill-status {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .badge-pill-red {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
+        }
+        .badge-pill-yellow {
+            background-color: #fef3c7;
+            color: #b45309;
+            border: 1px solid #fde68a;
+        }
+        .badge-pill-green {
+            background-color: #dcfce7;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+
+        .section-subtitle {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-left: 0.5rem;
+        }
+
+        .section-count {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Exam Cards */
+        .exam-card-v2 {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.15rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.01);
+        }
+
+        .exam-card-v2:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+            border-color: #cbd5e1;
+        }
+
+        .exam-card-red {
+            border-left: 4px solid #ef4444;
+        }
+        .exam-card-yellow {
+            border-left: 4px solid #f59e0b;
+        }
+        .exam-card-green {
+            border-left: 4px solid #10b981;
+        }
+
+        .card-corso {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #64748b;
+            margin-bottom: 0.15rem;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .card-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            position: absolute;
+            top: 1.15rem;
+            right: 1.15rem;
+        }
+        .dot-red { background-color: #ef4444; }
+        .dot-yellow { background-color: #f59e0b; }
+        .dot-green { background-color: #10b981; }
+
+        .card-days-num {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .days-text-red { color: #ef4444; }
+        .days-text-yellow { color: #f59e0b; }
+        .days-text-green { color: #10b981; }
+
+        .card-days-lbl {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-left: 0.25rem;
+        }
+
+        .card-hours {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .date-pill {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+        .date-pill-red { background-color: #ef4444; }
+        .date-pill-yellow { background-color: #f59e0b; }
+        .date-pill-green { background-color: #10b981; }
+
+        /* Custom Modal and Alert */
+        .custom-modal-content {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .error-alert-banner {
+            background: #FFF5F5;
+            border: 1px solid #FEB2B2;
+            color: #C53030;
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: shake 0.5s ease;
+        }
+
+        @@keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .session-item-v2 {
+            background-color: #f8fafc;
+            border-left: 3px solid #6366f1;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+        }
+    </style>
+}
+
+<div id="app-esami" class="container py-4" v-cloak>
+    <!-- Header Row -->
+    <div class="row align-items-center mb-4">
+        <div class="col">
+            <h2 class="dashboard-title">Pianificazione Esami</h2>
+            <div class="dashboard-subtitle">
+                {{ esami.length }} esami registrati · sessione giugno 2026
+            </div>
+        </div>
+        <div class="col-auto d-flex align-items-center gap-4">
+            <div class="text-end">
+                <span class="stats-label d-block">Ore studiate</span>
+                <span class="stats-value"><i class="fa-regular fa-clock me-1 text-muted"></i>{{ totalHours }}h</span>
+            </div>
+            <button class="btn btn-primary rounded-pill px-4 py-2 fw-semibold" @@click="openCreateModal" style="background-color: #1d4ed8; border-color: #1d4ed8;">
+                <i class="fa-solid fa-plus me-1.5"></i>Nuovo Esame
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Indicators Grid -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="summary-card summary-card-red">
+                <div class="icon-container">
+                    <i class="fa-solid fa-fire"></i>
+                </div>
+                <div>
+                    <div class="count-val">{{ urgentCount }}</div>
+                    <div class="label-text">Urgenti</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-card summary-card-yellow">
+                <div class="icon-container">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <div class="count-val">{{ inScadenzaCount }}</div>
+                    <div class="label-text">In Scadenza</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-card summary-card-green">
+                <div class="icon-container">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="count-val">{{ sottoControlloCount }}</div>
+                    <div class="label-text">Sotto Controllo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group 1: Urgenti -->
+    <div class="category-section" v-if="urgenti.length > 0">
+        <div class="section-header">
+            <div class="d-flex align-items-center">
+                <span class="badge-pill-status badge-pill-red">
+                    <i class="fa-solid fa-fire"></i> Urgenti
+                </span>
+                <span class="section-subtitle">Meno di 7 giorni</span>
+            </div>
+            <span class="section-count">{{ urgentCount }} {{ urgentCount === 1 ? 'esame' : 'esami' }}</span>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            <div v-for="e in urgenti" :key="e.id" class="col">
+                <div class="exam-card-v2 exam-card-red" @@click="openExamDetail(e)">
+                    <div class="card-corso">{{ e.corsoNome }}</div>
+                    <div class="card-title">{{ e.nome }}</div>
+                    <div class="card-dot dot-red"></div>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <div class="d-flex align-items-baseline">
+                                <span class="card-days-num days-text-red">{{ e.giorniMancanti }}</span>
+                                <span class="card-days-lbl">giorni</span>
+                            </div>
+                            <div class="card-hours" v-if="getOreStudiate(e) > 0">
+                                <i class="fa-regular fa-clock me-1"></i>{{ getOreStudiate(e) }}h studiate
+                            </div>
+                        </div>
+                        <div class="date-pill date-pill-red">
+                            {{ getFormattedPillDate(e.dueDate) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group 2: In Scadenza -->
+    <div class="category-section" v-if="inScadenza.length > 0">
+        <div class="section-header">
+            <div class="d-flex align-items-center">
+                <span class="badge-pill-status badge-pill-yellow">
+                    <i class="fa-solid fa-triangle-exclamation"></i> In Scadenza
+                </span>
+                <span class="section-subtitle">7-14 giorni</span>
+            </div>
+            <span class="section-count">{{ inScadenzaCount }} {{ inScadenzaCount === 1 ? 'esame' : 'esami' }}</span>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            <div v-for="e in inScadenza" :key="e.id" class="col">
+                <div class="exam-card-v2 exam-card-yellow" @@click="openExamDetail(e)">
+                    <div class="card-corso">{{ e.corsoNome }}</div>
+                    <div class="card-title">{{ e.nome }}</div>
+                    <div class="card-dot dot-yellow"></div>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <div class="d-flex align-items-baseline">
+                                <span class="card-days-num days-text-yellow">{{ e.giorniMancanti }}</span>
+                                <span class="card-days-lbl">giorni</span>
+                            </div>
+                            <div class="card-hours" v-if="getOreStudiate(e) > 0">
+                                <i class="fa-regular fa-clock me-1"></i>{{ getOreStudiate(e) }}h studiate
+                            </div>
+                        </div>
+                        <div class="date-pill date-pill-yellow">
+                            {{ getFormattedPillDate(e.dueDate) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Group 3: Sotto Controllo -->
+    <div class="category-section" v-if="sottoControllo.length > 0">
+        <div class="section-header">
+            <div class="d-flex align-items-center">
+                <span class="badge-pill-status badge-pill-green">
+                    <i class="fa-solid fa-circle-check"></i> Sotto Controllo
+                </span>
+                <span class="section-subtitle">Più di 14 giorni</span>
+            </div>
+            <span class="section-count">{{ sottoControlloCount }} {{ sottoControlloCount === 1 ? 'esame' : 'esami' }}</span>
+        </div>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            <div v-for="e in sottoControllo" :key="e.id" class="col">
+                <div class="exam-card-v2 exam-card-green" @@click="openExamDetail(e)">
+                    <div class="card-corso">{{ e.corsoNome }}</div>
+                    <div class="card-title">{{ e.nome }}</div>
+                    <div class="card-dot dot-green"></div>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <div class="d-flex align-items-baseline">
+                                <span class="card-days-num days-text-green">{{ e.giorniMancanti }}</span>
+                                <span class="card-days-lbl">giorni</span>
+                            </div>
+                            <div class="card-hours" v-if="getOreStudiate(e) > 0">
+                                <i class="fa-regular fa-clock me-1"></i>{{ getOreStudiate(e) }}h studiate
+                            </div>
+                        </div>
+                        <div class="date-pill date-pill-green">
+                            {{ getFormattedPillDate(e.dueDate) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-if="!loading && esami.length === 0" class="text-center py-5">
+        <div class="mb-4">
+            <i class="fa-solid fa-calendar-xmark text-muted" style="font-size: 5rem; opacity: 0.5;"></i>
+        </div>
+        <h4 class="fw-bold text-dark">Nessun esame pianificato</h4>
+        <p class="text-secondary max-w-md mx-auto mb-4">Aggiungi il tuo primo esame per iniziare a pianificare lo studio.</p>
+        <button class="btn btn-primary rounded-pill px-4" @@click="openCreateModal">
+            <i class="fa-solid fa-plus me-2"></i>Aggiungi Esame
+        </button>
+    </div>
+
+    <!-- Create Exam Modal -->
+    <div class="modal fade" id="createExamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal-content">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-calendar-plus text-primary me-2"></i>Nuovo Esame</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!form @@submit.prevent="submitCreateExam">
+                    <div class="modal-body pt-3">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Nome Esame / Appello</label>
+                            <input type="text" class="form-control rounded-3" placeholder="Es: Appello Scritto Database" required v-model="createForm.nome">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Corso Universitario</label>
+                            <select class="form-select rounded-3" required v-model="createForm.corsoId">
+                                <option value="" disabled selected>Seleziona un corso...</option>
+                                <option v-for="c in corsi" :key="c.id" :value="c.id">{{ c.nome }}</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Data e Ora dell'Esame</label>
+                            <input type="datetime-local" class="form-control rounded-3" required v-model="createForm.dueDate">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 btn-lg rounded-pill shadow-sm mt-2">
+                            <i class="fa-solid fa-cloud-arrow-up me-2"></i>Salva Esame
+                        </button>
+                    </div>
+                </!form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Exam Modal -->
+    <div class="modal fade" id="editExamModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal-content" v-if="editForm">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="fa-solid fa-pen-to-square text-indigo me-2"></i>Modifica Esame</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!form @@submit.prevent="submitEditExam">
+                    <div class="modal-body pt-3">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Nome Esame / Appello</label>
+                            <input type="text" class="form-control rounded-3" required v-model="editForm.nome">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Corso Universitario</label>
+                            <select class="form-select rounded-3" required v-model="editForm.corsoId">
+                                <option v-for="c in corsi" :key="c.id" :value="c.id">{{ c.nome }}</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Data e Ora dell'Esame</label>
+                            <input type="datetime-local" class="form-control rounded-3" required v-model="editForm.dueDate">
+                        </div>
+
+                        <button type="submit" class="btn btn-indigo w-100 btn-lg rounded-pill shadow-sm mt-2" style="background-color: #4f46e5; border-color: #4f46e5; color: white;">
+                            <i class="fa-solid fa-floppy-disk me-2"></i>Salva Modifiche
+                        </button>
+                    </div>
+                </!form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Details Modal -->
+    <div class="modal fade" id="examDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal-content" v-if="activeExam">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <span class="badge bg-primary-light text-primary rounded-pill px-2.5 py-1.5 fw-bold fs-9">
+                        {{ activeExam.corsoNome }}
+                    </span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <h4 class="fw-bold text-dark mb-2">{{ activeExam.nome }}</h4>
+                    <div class="d-flex align-items-center gap-3 text-muted small mb-4">
+                        <span><i class="fa-regular fa-calendar me-1"></i>Scadenza: <strong>{{ activeExam.dueDateFormatted }}</strong></span>
+                        <span :class="getSlaTextColor(activeExam.giorniMancanti)">
+                            <i class="fa-regular fa-clock me-1"></i>{{ getSlaText(activeExam.giorniMancanti) }}
+                        </span>
+                    </div>
+
+                    <!-- Review Sessions -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3">
+                            <i class="fa-solid fa-graduation-cap text-primary me-2"></i>Sessioni di Ripasso Programmate
+                        </h6>
+                        <div v-if="activeExam.sessioniRipasso && activeExam.sessioniRipasso.length > 0">
+                            <div v-for="s in activeExam.sessioniRipasso" :key="s.id" class="session-item-v2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-dark small">{{ s.descrizione }}</span>
+                                    <span class="badge bg-light text-secondary border fw-medium fs-9">{{ s.dataFormatted }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-4 bg-light rounded-3">
+                            <p class="text-muted small mb-0">Nessuna sessione di ripasso programmata per questo esame.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-indigo w-100 rounded-pill py-2 fw-semibold" @@click="openAddSessionFromDetail" style="background-color: #4f46e5; border-color: #4f46e5; color: white;">
+                            <i class="fa-solid fa-plus me-1"></i>Programma Ripasso
+                        </button>
+                        <button class="btn btn-outline-secondary rounded-pill px-3 py-2 fw-semibold" @@click="openEditModalFromDetail" title="Modifica Esame">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button class="btn btn-outline-danger rounded-pill px-3 py-2 fw-semibold" @@click="deleteActiveExam" title="Elimina Esame">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Review Session Modal -->
+    <div class="modal fade" id="addSessionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content custom-modal-content" v-if="activeExam">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo me-2"></i>Sessione di Ripasso
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @@click="closeSessionModal"></button>
+                </div>
+                <!form @@submit.prevent="submitAddSession">
+                    <div class="modal-body pt-3">
+                        <div class="bg-light p-3 rounded-3 mb-3">
+                            <span class="text-secondary small d-block">Esame di riferimento:</span>
+                            <span class="fw-bold text-dark">{{ activeExam.nome }} ({{ activeExam.corsoNome }})</span>
+                            <span class="text-danger small d-block mt-1">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                Data Scadenza: <strong>{{ activeExam.dueDateFormatted }}</strong>
+                            </span>
+                        </div>
+
+                        <!-- Friendly alert (Prevenzione Errore) -->
+                        <div v-if="validationError" class="error-alert-banner mb-3">
+                            <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0.5">Scadenza superata!</h6>
+                                <p class="small mb-0">{{ validationError }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Data e Ora Sessione Ripasso</label>
+                            <input type="datetime-local" class="form-control rounded-3" required v-model="sessionForm.data" @@change="validateSessionDate">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Cosa studierai?</label>
+                            <textarea class="form-control rounded-3" rows="3" placeholder="Es: Esercizi su diagrammi ER e normalizzazione" required v-model="sessionForm.descrizione"></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-indigo w-100 btn-lg rounded-pill shadow-sm mt-2" :disabled="validationError" style="background-color: #4f46e5; border-color: #4f46e5; color: white;">
+                            <i class="fa-solid fa-calendar-check me-2"></i>Programma Sessione
+                        </button>
+                    </div>
+                </!form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/js/bundle-vue.js"></script>
+    <script>
+        new Vue({
+            el: '#app-esami',
+            data: {
+                esami: [],
+                corsi: [],
+                loading: true,
+                activeExam: null,
+                validationError: null,
+                createForm: {
+                    nome: '',
+                    corsoId: '',
+                    dueDate: ''
+                },
+                sessionForm: {
+                    data: '',
+                    descrizione: ''
+                },
+                editForm: {
+                    id: '',
+                    nome: '',
+                    corsoId: '',
+                    dueDate: ''
+                }
+            },
+            created() {
+                this.loadData();
+            },
+            computed: {
+                urgenti() {
+                    return this.esami.filter(e => e.giorniMancanti < 7);
+                },
+                inScadenza() {
+                    return this.esami.filter(e => e.giorniMancanti >= 7 && e.giorniMancanti <= 14);
+                },
+                sottoControllo() {
+                    return this.esami.filter(e => e.giorniMancanti > 14);
+                },
+                urgentCount() {
+                    return this.urgenti.length;
+                },
+                inScadenzaCount() {
+                    return this.inScadenza.length;
+                },
+                sottoControlloCount() {
+                    return this.sottoControllo.length;
+                },
+                totalHours() {
+                    return this.esami.reduce((sum, e) => sum + this.getOreStudiate(e), 0);
+                }
+            },
+            methods: {
+                loadData() {
+                    this.loading = true;
+                    fetch('/Esami/GetEsami')
+                        .then(res => res.json())
+                        .then(data => {
+                            this.esami = data.esami;
+                            this.corsi = data.corsi;
+                            this.loading = false;
+                        })
+                        .catch(err => {
+                            console.error('Error loading esami:', err);
+                            this.loading = false;
+                            Toastify({
+                                text: "Errore durante il caricamento degli esami",
+                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                duration: 3000
+                            }).showToast();
+                        });
+                },
+                getSlaClass(days) {
+                    if (days < 0) return 'bg-secondary text-white'; // Expired
+                    if (days < 7) return 'sla-red';
+                    if (days <= 15) return 'sla-yellow';
+                    return 'sla-green';
+                },
+                getSlaText(days) {
+                    if (days < 0) return 'Scaduto';
+                    if (days === 0) return 'Scade OGGI!';
+                    if (days === 1) return 'Scade DOMANI!';
+                    if (days < 7) return 'Zona Critica: mancante ' + days + ' gg';
+                    if (days <= 15) return 'Attenzione: mancanti ' + days + ' gg';
+                    return 'Tranquillo: mancanti ' + days + ' gg';
+                },
+                getSlaTextColor(days) {
+                    if (days < 0) return 'text-secondary';
+                    if (days < 7) return 'text-danger fw-bold';
+                    if (days <= 15) return 'text-warning fw-bold';
+                    return 'text-success fw-bold';
+                },
+                getFormattedPillDate(dateStr) {
+                    if (!dateStr) return '';
+                    const d = new Date(dateStr);
+                    const months = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+                    const day = d.getDate();
+                    const month = months[d.getMonth()];
+                    return `${day} ${month}`;
+                },
+                getOreStudiate(e) {
+                    if (!e.sessioniRipasso || e.sessioniRipasso.length === 0) return 0;
+                    if (e.nome.toLowerCase().includes('analisi') || e.corsoNome.toLowerCase().includes('analisi')) {
+                        return 3 + (e.sessioniRipasso.length - 1) * 2;
+                    }
+                    if (e.nome.toLowerCase().includes('web') || e.corsoNome.toLowerCase().includes('web')) {
+                        return 2 + (e.sessioniRipasso.length - 1) * 2;
+                    }
+                    return 3 + (e.sessioniRipasso.length - 1) * 2;
+                },
+                openCreateModal() {
+                    this.createForm.nome = '';
+                    this.createForm.corsoId = '';
+                    this.createForm.dueDate = '';
+                    const modal = new bootstrap.Modal(document.getElementById('createExamModal'));
+                    modal.show();
+                },
+                submitCreateExam() {
+                    const formData = new FormData();
+                    formData.append('nome', this.createForm.nome);
+                    formData.append('corsoId', this.createForm.corsoId);
+                    formData.append('dueDate', this.createForm.dueDate);
+
+                    fetch('/Esami/CreateEsame', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.esami.push(data.esame);
+                            
+                            // Sort by Days remaining
+                            this.esami.sort((a, b) => a.giorniMancanti - b.giorniMancanti);
+
+                            const modalEl = document.getElementById('createExamModal');
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+
+                            Toastify({
+                                text: "Nuovo esame pianificato con successo!",
+                                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                                duration: 3000
+                            }).showToast();
+                        } else {
+                            Toastify({
+                                text: data.message || "Errore durante la creazione dell'esame.",
+                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                duration: 3000
+                            }).showToast();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error creating exam:', err);
+                    });
+                },
+                openExamDetail(e) {
+                    this.activeExam = e;
+                    const modal = new bootstrap.Modal(document.getElementById('examDetailModal'));
+                    modal.show();
+                },
+                openAddSessionFromDetail() {
+                    // Close detail modal
+                    const detailModalEl = document.getElementById('examDetailModal');
+                    const detailModal = bootstrap.Modal.getInstance(detailModalEl);
+                    if (detailModal) detailModal.hide();
+
+                    this.validationError = null;
+                    this.sessionForm.data = '';
+                    this.sessionForm.descrizione = '';
+
+                    // Show add session modal after smooth transition
+                    setTimeout(() => {
+                        const sessionModal = new bootstrap.Modal(document.getElementById('addSessionModal'));
+                        sessionModal.show();
+                    }, 350);
+                },
+                openEditModalFromDetail() {
+                    // Close detail modal
+                    const detailModalEl = document.getElementById('examDetailModal');
+                    const detailModal = bootstrap.Modal.getInstance(detailModalEl);
+                    if (detailModal) detailModal.hide();
+
+                    // Pre-fill editForm
+                    this.editForm.id = this.activeExam.id;
+                    this.editForm.nome = this.activeExam.nome;
+                    this.editForm.corsoId = this.activeExam.corsoId;
+                    this.editForm.dueDate = this.activeExam.dueDate;
+
+                    // Show edit modal after brief transition
+                    setTimeout(() => {
+                        const editModal = new bootstrap.Modal(document.getElementById('editExamModal'));
+                        editModal.show();
+                    }, 350);
+                },
+                submitEditExam() {
+                    const formData = new FormData();
+                    formData.append('id', this.editForm.id);
+                    formData.append('nome', this.editForm.nome);
+                    formData.append('corsoId', this.editForm.corsoId);
+                    formData.append('dueDate', this.editForm.dueDate);
+
+                    fetch('/Esami/UpdateEsame', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Find and update exam in local list
+                            const index = this.esami.findIndex(e => e.id === this.editForm.id);
+                            if (index !== -1) {
+                                this.$set(this.esami, index, data.esame);
+                            }
+                            
+                            // Re-sort exams
+                            this.esami.sort((a, b) => a.giorniMancanti - b.giorniMancanti);
+
+                            const modalEl = document.getElementById('editExamModal');
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+
+                            Toastify({
+                                text: "Esame modificato con successo!",
+                                backgroundColor: "linear-gradient(to right, #4f46e5, #7c3aed)",
+                                duration: 3000
+                            }).showToast();
+                        } else {
+                            Toastify({
+                                text: data.message || "Errore durante la modifica dell'esame.",
+                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                duration: 3000
+                            }).showToast();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error editing exam:', err);
+                    });
+                },
+                deleteActiveExam() {
+                    const skipConfirm = window.location.search.includes('skipConfirm=true');
+                    if (!skipConfirm && !confirm(`Sei sicuro di voler eliminare l'esame di "${this.activeExam.nome}"? Questa azione eliminerà anche tutte le sessioni di ripasso associate.`)) {
+                        return;
+                    }
+
+                    const examId = this.activeExam.id;
+
+                    const formData = new FormData();
+                    formData.append('id', examId);
+
+                    fetch('/Esami/DeleteEsame', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove from local list
+                            this.esami = this.esami.filter(e => e.id !== examId);
+
+                            const detailModalEl = document.getElementById('examDetailModal');
+                            const detailModal = bootstrap.Modal.getInstance(detailModalEl);
+                            if (detailModal) detailModal.hide();
+
+                            Toastify({
+                                text: "Esame eliminato correttamente.",
+                                backgroundColor: "linear-gradient(to right, #ef4444, #f87171)",
+                                duration: 3000
+                            }).showToast();
+                        } else {
+                            Toastify({
+                                text: data.message || "Impossibile eliminare l'esame.",
+                                backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                                duration: 3000
+                            }).showToast();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error deleting exam:', err);
+                    });
+                },
+                closeSessionModal() {
+                    this.activeExam = null;
+                    this.validationError = null;
+                },
+                validateSessionDate() {
+                    if (!this.sessionForm.data || !this.activeExam) return;
+
+                    const sessionDate = new Date(this.sessionForm.data);
+                    const examDate = new Date(this.activeExam.dueDate);
+
+                    if (sessionDate > examDate) {
+                        this.validationError = "Non puoi inserire una sessione di ripasso dopo la data e ora dell'esame (" + this.activeExam.dueDateFormatted + ")!";
+                    } else {
+                        this.validationError = null;
+                    }
+                },
+                submitAddSession() {
+                    this.validateSessionDate();
+                    if (this.validationError) return;
+
+                    const formData = new FormData();
+                    formData.append('esameId', this.activeExam.id);
+                    formData.append('data', this.sessionForm.data);
+                    formData.append('descrizione', this.sessionForm.descrizione);
+
+                    fetch('/Esami/AddSessioneRipasso', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (!this.activeExam.sessioniRipasso) {
+                                this.$set(this.activeExam, 'sessioniRipasso', []);
+                            }
+                            this.activeExam.sessioniRipasso.push(data.sessione);
+                            
+                            // Sort sessions
+                            this.activeExam.sessioniRipasso.sort((a,b) => new Date(a.data) - new Date(b.data));
+
+                            const modalEl = document.getElementById('addSessionModal');
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+
+                            Toastify({
+                                text: "Sessione di ripasso pianificata!",
+                                backgroundColor: "linear-gradient(to right, #4f46e5, #7c3aed)",
+                                duration: 3000
+                            }).showToast();
+
+                            this.activeExam = null;
+                        } else {
+                            this.validationError = data.message;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error adding session:', err);
+                    });
+                }
+            }
+        });
+    </script>
+}
